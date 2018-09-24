@@ -1,0 +1,1 @@
+# mse_automation_of_the_teacher_work_in_programming_and_cs_courses
