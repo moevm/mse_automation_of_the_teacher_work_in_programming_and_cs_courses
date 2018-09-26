@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Своднаая таблица{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<table class="blueTable">
+<thead>
+<tr>
+    <th>Name</th>
+    {%- for c in course %}
+    <th>{{c}}</th>
+    {%- endfor %}
+</tr>
+</thead>
+<tbody>
+{% for n in name %}
+<tr>
+    <td>{{n}}</td>
+    {%- for c in course %}
+    <td>0%</td>
+    {%- endfor %}
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+{% endblock %}
