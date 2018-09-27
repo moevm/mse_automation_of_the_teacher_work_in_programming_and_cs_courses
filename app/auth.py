@@ -19,9 +19,6 @@ def login():
     if not error and code:
         stepic.init_token(code,redirect_uri)
 
-        print(stepic.get_user_id())
-        print(stepic.get_user_name())
-
         db = get_db()
         user_id = stepic.get_user_id()
         user = db.execute(

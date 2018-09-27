@@ -37,7 +37,6 @@ class StepicAPI:
         }, auth=auth)
         self.token = self.response.json().get('access_token', None)
         self.token_type=self.response.json().get('token_type', None)
-        print(self.response.text)
 
         if not self.token:
             print("Token error")
