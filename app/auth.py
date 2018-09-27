@@ -33,10 +33,10 @@ def login():
 
         session.clear()
         session['user_id'] = user_id
+        return redirect(url_for('index'))
     else:
+        return render_template('page/error.html')
         print("ERROR: get token error")
-
-    return redirect(url_for('index'))
 
 
 @bp.before_app_request
