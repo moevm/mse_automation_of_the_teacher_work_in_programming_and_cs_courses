@@ -55,6 +55,7 @@ def load_logged_in_user():
 @bp.route('/logout')
 def logout():
     session.clear()
+    stepic.clear_token()
     return redirect(url_for('index'))
 
 

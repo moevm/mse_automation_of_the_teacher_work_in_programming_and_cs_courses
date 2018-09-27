@@ -42,6 +42,17 @@ class StepicAPI:
         if not self.token:
             print("Token error")
 
+
+    def clear_token(self):
+        """
+        Выход пользователя
+        :return:
+        """
+        self.response_token=None
+        self.token=None
+        self.token_type=None
+        self.current_user=None
+
     @property
     def _headers(self):
         return {'Authorization': self.token_type+' ' + self.token}
@@ -53,7 +64,6 @@ class StepicAPI:
         res = requests.get(self.url_api + 'stepics/1', headers=self._headers)
         if res.status_code <300:
             self.current_user=res.json()
-
 
     def get_user_id(self,id=None):
         """

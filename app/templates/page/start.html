@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Автоматизация работы преподавателя в курсах по программированию и информатике{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+{% if g.user %}
+    <a href="{{ url_for('page.index') }}">Перейти к сводной таблице</a>
+{% else %}
+    Для продолжения необходимо <a href="{{ url_for('auth.login_stepic') }}">авторизоваться</a>
+{% endif %}
+
+{% endblock %}
