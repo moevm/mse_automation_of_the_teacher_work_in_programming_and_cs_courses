@@ -1,9 +1,9 @@
 import functools
 
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, session, url_for
+    Blueprint, g, redirect, render_template, request, session, url_for,config
 )
-
+from flask import current_app as app
 from app.db import get_db
 from stepic_api import StepicAPI
 
@@ -17,7 +17,10 @@ def login():
     code = request.args.get('code')
 
     if not error and code:
-        stepic.init_token(code,redirect_uri)
+        if app.condig['ENV']=='development':
+            stepic.init_token(code,redirect_uri,save=app.instance_path)
+        else:
+            stepic.init_token(code, redirect_uri)
 
         db = get_db()
         user_id = stepic.get_user_id()
@@ -48,6 +51,11 @@ def load_logged_in_user():
     else:
         g.user = stepic.get_user_name()
 
+    if app.condig['ENV'] == 'development':
+        g.dev = True
+    else:
+        g.dev = None
+
 
 @bp.route('/logout')
 def logout():
@@ -66,7 +74,32 @@ def login_required(view):
 
     return wrapped_view
 
-
 @bp.route('/login_stepic')
 def login_stepic():
     return redirect(stepic.get_url_authorize(redirect_uri))
+
+@bp.route('/login_dev')
+def login_dev():
+
+
+    if not error and code:
+        stepic.init_token(code,redirect_uri)
+
+        db = get_db()
+        user_id = stepic.get_user_id()
+        user = db.execute(
+            'SELECT * FROM user WHERE username = ?', (user_id,)
+        ).fetchone()
+
+        if user is None:
+            db.execute(
+                'INSERT INTO user (username, password) VALUES (?, ?)',
+                (user_id, ' '))
+            db.commit()
+
+        session.clear()
+        session['user_id'] = user_id
+        return redirect(url_for('index'))
+    else:
+        return render_template('page/error.html')
+        print("ERROR: get token error")
