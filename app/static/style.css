@@ -42,16 +42,16 @@ table.blueTable tr:nth-child(even) {
   background: #D0E4F5;
 }
 table.blueTable thead {
-  background: #1C6EA4;
-  background: -moz-linear-gradient(top, #5592bb 0%, #327cad 66%, #1C6EA4 100%);
-  background: -webkit-linear-gradient(top, #5592bb 0%, #327cad 66%, #1C6EA4 100%);
-  background: linear-gradient(to bottom, #5592bb 0%, #327cad 66%, #1C6EA4 100%);
+  background: #C4B0C3;
+  background: -moz-linear-gradient(top, #AB99A9 0%, #B8A5B6 66%, #C4B0C3 100%);
+  background: -webkit-linear-gradient(top, #AB99A9 0%, #B8A5B6 66%, #C4B0C3 100%);
+  background: linear-gradient(to bottom, #AB99A9 0%, #B8A5B6 66%, #C4B0C3 100%);
   border-bottom: 2px solid #444444;
 }
 table.blueTable thead th {
   font-size: 15px;
   font-weight: bold;
-  color: #FFFFFF;
+  color: #6D5FC4;
   border-left: 2px solid #D0E4F5;
 }
 table.blueTable thead th:first-child {

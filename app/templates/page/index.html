@@ -10,14 +10,14 @@
 <tr>
     <th>Name</th>
     {%- for c in course %}
-    <th>{{c}}</th>
+    <th><a href="{{ url_for('page.course_page',id=c['id']) }}">{{c['name']}}</a></th>
     {%- endfor %}
 </tr>
 </thead>
 <tbody>
-{% for n in name %}
+{% for n in names %}
 <tr>
-    <td>{{n}}</td>
+    <td><a href="{{ url_for('page.student_page',id=n['id']) }}"> {{n['name']}} </a></td>
     {%- for c in course %}
     <td>0%</td>
     {%- endfor %}
