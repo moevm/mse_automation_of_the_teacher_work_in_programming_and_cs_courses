@@ -76,7 +76,7 @@ class StepicAPI:
         print(f"Error: client id: file {path} has wrong structure")
         return None, None
 
-    def load_token(self, path: str = 'token.json'):
+    def load_token(self, path: str = os.path.join('instance','token.json')):
         """
         Загружает токен из файла. Если загрузка удалась, то возращает True, инача - False
         :param path: путь к токену
