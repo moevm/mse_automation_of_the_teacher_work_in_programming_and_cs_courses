@@ -1,6 +1,7 @@
 import requests
 import json
-from os import path
+import os
+
 
 def get_current_user(token):
     res = requests.get('https://stepik.org/api/stepics/1', header=f'Authorization: Bearer {token}')
@@ -16,28 +17,35 @@ class StepicAPI:
         self.token_type = None
         self.current_user = None
 
-    def get_url_authorize(self, redirect_uri):
-        if self.token:
-            print("Token exist")
-            return
-
+    def get_url_authorize(self, redirect_uri:str):
+        """
+        Возвращает ссылку для регистрации на степике
+        :param redirect_uri:  ссылк на адрес, который получит код авторизации
+        :return:
+        """
         return self.url_auth + f'authorize/?response_type=code&client_id={self.client_id}&redirect_uri={redirect_uri}'
 
-    def init_token(self, code, redirect_uri,path=False):
+    def init_token(self, code:str, redirect_uri:str):
+        """
+        Инициализация токена по полуенному коду.
+        :param code: код авторизации
+        :param redirect_uri: адрес, которы получил этот код
+        :return: None
+        """
 
         auth = requests.auth.HTTPBasicAuth(self.client_id, self.client_secret)
 
-        self.response = requests.post(self.url_auth + 'token/', data={
+        self.response_token = requests.post(self.url_auth + 'token/', data={
             'grant_type': 'authorization_code',
             'code': code,
             'redirect_uri': redirect_uri
-        }, auth=auth)
+        }, auth=auth).json()
 
-        self.token = self.response.json().get('access_token', None)
-        self.token_type = self.response.json().get('token_type', None)
+        self.token = self.response_token.get('access_token', None)
+        self.token_type = self.response_token.get('token_type', None)
 
         if not self.token:
-            print("Token error")
+            print("Error: init token: get token error")
 
     def clear_token(self):
         """
@@ -49,53 +57,94 @@ class StepicAPI:
         self.token_type = None
         self.current_user = None
 
-    def load_client(self, file):
-        with open(file) as f:
+    def load_client(self, path: str):
+        """
+        Получение данных клиента для взаимодействия с апи
+        :param file: путь к файлу
+        :return: (client_id, secret_key)
+        """
+        if not os.path.exists(path):
+            print("Error: load client: path not found")
+            return None, None
+
+        with open(path) as f:
             data = json.load(f)
 
         if data:
             return data.get('client_id'), data.get('client_secret')
 
-        print("ERROR: file is-nt exist")
+        print(f"Error: client id: file {path} has wrong structure")
         return None, None
 
-    def save_responce(self,path):
+    def load_token(self, path: str = 'token.json'):
+        """
+        Загружает токен из файла. Если загрузка удалась, то возращает True, инача - False
+        :param path: путь к токену
+        :return: Bool
+        """
+        if not os.path.exists(path):
+            print("Error: load token: path not found")
+            return False
+
+        with open(path,'r') as f:
+            data = json.load(f)
+
+        if data and 'access_token' in data and 'token_type' in data:
+            self.response_token = data
+            self.token = data['access_token']
+            self.token_type = data['token_type']
+            return True
+        else:
+            (f"Error: load token: file {path} has wrong structure")
+            return False
+
+    def save_token(self, path: str = os.path.join('instance','token.json')):
+        """
+        Созраняет токен в файл
+        :param path:
+        :return:
+        """
+        print(self.response_token)
         if path:
-            with open(path.join(path,'response.json'), 'w') as outfile:
-                json.dump(self.response, outfile)
+            with open(path, 'w') as outfile:
+                json.dump(self.response_token, outfile)
 
     @property
     def _headers(self):
         return {'Authorization': self.token_type + ' ' + self.token}
 
-    def download_currnet_user(self):
+    def download_current_user(self):
+        """
+        Загрузка информации о текущем пользователе
+        :return:
+        """
         if not self.token:
-            print("Token don't exist")
+            print("Error: download current user: token don't exist")
             return
+
         res = requests.get(self.url_api + 'stepics/1', headers=self._headers)
         if res.status_code < 300:
-            self.current_user = res.json()
+            self.current_user = res.json()['users']
+        else:
+            print("Error: download current user: status code",res.status_code)
 
     def get_user_id(self, id=None):
         """
-
+        Получение информации о пользователе.
+        Если id не передан, то возвращается информация о текущем пользователе
         :param id:
         :return:
         """
         if not id:
             if not self.current_user:
-                self.download_currnet_user()
+                self.download_current_user()
 
                 if not self.current_user:
-                    print("Error get_current_user_id")
                     return None
 
-            try:
-                res = self.current_user['users'][0]['id']
-            except Exception:
-                return None
-            else:
-                return res
+            return self.current_user[0]['id']
+        else:
+            pass
 
     def get_user_name(self, id=None):
         """
@@ -105,19 +154,12 @@ class StepicAPI:
         :return: list[dict]
         """
         if not id:
+
             if not self.current_user:
-                self.download_currnet_user()
-
+                self.download_current_user()
                 if not self.current_user:
-                    print("Error get_current_user_name")
-                    return None
-            try:
-                res = self.current_user['users'][0]['full_name']
-            except Exception:
-                return None
-            else:
-                return res
-
+                    return
+            return self.current_user[0]['full_name']
         else:
             pass
 

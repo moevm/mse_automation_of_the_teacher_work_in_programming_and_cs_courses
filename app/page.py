@@ -9,10 +9,13 @@ from app.all_info import *
 
 bp = Blueprint('page', __name__)
 
+
 @bp.route('/')
+@login_required
 def index():
-    print(config.Config)
-    if session.get('user_id'):
-        return render_template('page/index.html', name=get_name(),course=get_course())
-    else:
-        return render_template('page/start.html')
+    return render_template('page/index.html', name=get_name(),course=get_course())
+
+@bp.route('/start')
+def start_page():
+    return render_template('page/start.html')
+

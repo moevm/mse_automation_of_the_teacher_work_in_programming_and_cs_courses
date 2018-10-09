@@ -13,15 +13,24 @@ redirect_uri = 'http://127.0.0.1:5000/auth/login'
 
 @bp.route('/login')
 def login():
+    """
+    Авторизация пользователя
+    :return:
+    """
+    #ошибка
     error = request.args.get('error')
+    #код авторищации
     code = request.args.get('code')
 
+    #если нет ошибки и есть код
     if not error and code:
-        if app.condig['ENV']=='development':
-            stepic.init_token(code,redirect_uri,save=app.instance_path)
-        else:
-            stepic.init_token(code, redirect_uri)
+        #получаем токен
+        stepic.init_token(code, redirect_uri)
 
+        if app.config['ENV'] == 'development':
+            stepic.save_token()
+
+        #сохраняем пользователя в базу
         db = get_db()
         user_id = stepic.get_user_id()
         user = db.execute(
@@ -34,16 +43,21 @@ def login():
                 (user_id, ' '))
             db.commit()
 
+        #очищаем ссесию
         session.clear()
         session['user_id'] = user_id
         return redirect(url_for('index'))
     else:
         return render_template('page/error.html')
-        print("ERROR: get token error")
+        print("Error:login: get code error")
 
 
 @bp.before_app_request
 def load_logged_in_user():
+    """
+    Загрузка информации перел открытием страницы
+    :return:
+    """
     user_id= session.get('user_id')
 
     if user_id is None:
@@ -51,7 +65,7 @@ def load_logged_in_user():
     else:
         g.user = stepic.get_user_name()
 
-    if app.condig['ENV'] == 'development':
+    if app.config['ENV'] == 'development':
         g.dev = True
     else:
         g.dev = None
@@ -59,16 +73,24 @@ def load_logged_in_user():
 
 @bp.route('/logout')
 def logout():
+    """
+    Выход пользователя
+    :return:
+    """
     session.clear()
     stepic.clear_token()
     return redirect(url_for('index'))
 
-
 def login_required(view):
+    """
+    Декоратор, проверяющий залогинен ли пользователь
+    :param view:
+    :return:
+    """
     @functools.wraps(view)
     def wrapped_view(**kwargs):
         if g.user is None:
-            return redirect(url_for('auth.login_stepic'))
+            return redirect(url_for('page.start_page'))
 
         return view(**kwargs)
 
@@ -76,15 +98,20 @@ def login_required(view):
 
 @bp.route('/login_stepic')
 def login_stepic():
+    """
+    Авторизация пользователя через степик
+    :return:
+    """
     return redirect(stepic.get_url_authorize(redirect_uri))
 
 @bp.route('/login_dev')
 def login_dev():
-
-
-    if not error and code:
-        stepic.init_token(code,redirect_uri)
-
+    """
+    Авторизация пользователя через степик  в режиме разработчика
+    :return:
+    """
+    if stepic.load_token():
+        # сохраняем пользователя в базу
         db = get_db()
         user_id = stepic.get_user_id()
         user = db.execute(
@@ -97,9 +124,10 @@ def login_dev():
                 (user_id, ' '))
             db.commit()
 
+        # очищаем ссесию
         session.clear()
         session['user_id'] = user_id
         return redirect(url_for('index'))
     else:
-        return render_template('page/error.html')
-        print("ERROR: get token error")
+        #переходим на авторизаци степика
+        return redirect(stepic.get_url_authorize(redirect_uri))
