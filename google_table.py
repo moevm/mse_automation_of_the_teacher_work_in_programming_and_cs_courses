@@ -1,11 +1,12 @@
 import google_instr as g_instr
 import configuration as conf
+import gspread.exceptions
 
 
 class GoogleTable:
 
     Table = 0
-    Sheet = 0
+    Sheet = None
 
     def __init__(self, gc, url, sheet=0):
         """
@@ -13,8 +14,12 @@ class GoogleTable:
         :param url: string - ссылка на таблицу
         :param sheet: int/string - нормер/название листа таблицы
         """
-        self.Table = gc.open_by_url(url)
-        self.set_sheet(sheet)
+        try:
+            self.Table = gc.open_by_url(url)
+        except gspread.exceptions:
+            print("Ошибка google_api, проверьте правильность ссылки на таблицу")
+        else:
+            self.set_sheet(sheet)
 
     def set_sheet(self, sheet):
         """
@@ -22,7 +27,11 @@ class GoogleTable:
         :param sheet: int/string - номер/название листа таблицы
         :return: -
         """
-        self.Sheet = self.Table.get_worksheet(sheet)
+        sh = self.Table.get_worksheet(sheet)
+        if sh is not None:
+            self.Sheet = sh
+        else:
+            print(f"Несуществующий лист таблицы: {sheet}")
 
     def get_column(self, num):
         """
@@ -30,7 +39,8 @@ class GoogleTable:
         :param num: int - номер требуемого столбца
         :return: [] - список значений всех ячеек столбца
         """
-        return self.Sheet.col_values(num)
+        if self.is_sheet_none() is False:
+            return self.Sheet.col_values(num)
 
     def get_row(self, num):
         """
@@ -38,7 +48,8 @@ class GoogleTable:
         :param num: int - номер требуемой строки
         :return: [] - список значений всех ячеек строки
         """
-        return self.Sheet.row_values(num)
+        if self.is_sheet_none() is False:
+            return self.Sheet.row_values(num)
 
     def get_list(self, col, row_from, row_to):
         """
@@ -48,7 +59,15 @@ class GoogleTable:
         :param row_to: int -конец диапазона строк
         :return: [] - список значений ячеек требуемого диапазона строк из столбца
         """
-        return self.get_column(col)[row_from:row_to]
+        if self.is_sheet_none() is False:
+            return self.get_column(col)[row_from:row_to]
+
+    def is_sheet_none(self):
+        """
+        Проверка неудачного открытия листа таблицы
+        :return:
+        """
+        return self.Sheet is None
 
 
 if __name__ == "__main__":
@@ -56,7 +75,9 @@ if __name__ == "__main__":
     config = conf.Configuration()
     'Создание gspread для работы с таблицей'
     google_inst = g_instr.GoogleInstrument()
+    'Получение конфигурационных данных о гугл-таблице'
+    table_config = config.get_google_table_config()
     'Открытие таблицы с помощью gspread согласно конфигурационным данным'
-    a = GoogleTable(google_inst.get_gc(), config.get_config_by_key('URL'), config.get_config_by_key('Sheet'))
+    a = GoogleTable(google_inst.get_gc(), table_config['URL'], table_config['Sheet'])
     'Получение списка из таблицы'
-    print(a.get_list(config.get_config_by_key('Col'), config.get_config_by_key('Rows')[0], config.get_config_by_key('Rows')[1]))
+    print(a.get_list(table_config['Col'], table_config['Rows'][0], table_config['Rows'][1]))
