@@ -1,6 +1,16 @@
 {
-  "URL": "https://docs.google.com/spreadsheets/d/16I1mG_kMugBpnh_K23V_GTOWuN5hAEQG6OfOhIOlprA/edit",
-  "Sheet": 0,
-  "Col": 1,
-  "Rows": [11,21]
+
+  "google_table": {
+    "URL": "https://docs.google.com/spreadsheets/d/16I1mG_kMugBpnh_K23V_GTOWuN5hAEQG6OfOhIOlprA/edit",
+    "Sheet": 0,
+    "Col": 1,
+    "Rows": [
+      11,
+      21
+    ]
+  },
+  "stepic": {
+    "course": 64,
+    "smth_info": "information"
+  }
 }
