@@ -162,17 +162,17 @@ class StepicAPI:
                     return
             return self.current_user[0]['full_name']
         else:
-         students_fn = []
-         if type(id) is str:
+            if type(id) is str:
                 user = requests.get(api_url + 'users/' + str(id)).json()['users'][0]
-                students_fn.append({id: user['last_name'] + " " + user['first_name']})
-         else:
+                return ({id: user['last_name'] + " " + user['first_name']})
+            else:
+                students_fn = []
                 for user_id in id:
                     user = requests.get(api_url + 'users/' + str(user_id)).json()['users'][0]
                     students_fn.append({user_id: user['last_name'] + " " + user['first_name']})
-         return students_fn
+                return students_fn
 
-    def download_user(self, id):
+    def download_user(self, ids):
         """
         возвращающает json или список json-ов пользователей с id
         api: https://stepik.org/api/users/ID
@@ -180,7 +180,13 @@ class StepicAPI:
         :param id: список id или один id пользователей
         :return: список json-ов или json пользотелей
         """
-        pass
+        if type(ids) is str:
+            with open(ids+".json", "w") as f:
+                json.dump(get_user_name(ids), f, indent=4, sort_keys=True, ensure_ascii=False)
+        else:
+            for id in ids:
+                with open(id+".json", "w") as f:
+                    json.dump(get_user_name(id), f, indent=4, sort_keys=True, ensure_ascii=False)
 
     def get_course_statistic(self, id):
         """
