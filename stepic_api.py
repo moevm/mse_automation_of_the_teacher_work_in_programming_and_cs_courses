@@ -165,11 +165,11 @@ class StepicAPI:
          students_fn = []
          if type(id) is str:
                 user = requests.get(api_url + 'users/' + str(id)).json()['users'][0]
-                students_fn.append({user['last_name']: user['first_name']})
+                students_fn.append({id: user['last_name'] + " " + user['first_name']})
          else:
                 for user_id in id:
                     user = requests.get(api_url + 'users/' + str(user_id)).json()['users'][0]
-                    students_fn.append({user['last_name']: user['first_name']})
+                    students_fn.append({user_id: user['last_name'] + " " + user['first_name']})
          return students_fn
 
     def download_user(self, id):
