@@ -5,12 +5,12 @@ import os
 class Configuration:
     _Data = {}
 
-    def __init__(self, path_config_file="resources/config.json"):
+    def __init__(self, path_config_file=os.path.join("resources", "config.json")):
         """
         Считывание конфигурационного файла
         :return: -
         """
-        if os.path.exists(path_config_file) is True:
+        if os.path.exists(path_config_file):
             with open(path_config_file, 'r', encoding='utf-8') as fh:
                 try:
                     data = json.load(fh)
@@ -48,28 +48,13 @@ class Configuration:
         :param key: string - ключ
         :return: элемент конфигурации
         """
-        if self.is_data_empty() is False:
-            if self.is_key_valid(key) is True:
+        if self._Data:
+            if key in self._Data.keys():
                 return self._Data[key]
             else:
                 print(f"Ключ недействителен: '{key}'")
         else:
             print("Конфигурационные данные отсутствуют")
-
-    def is_key_valid(self, key):
-        """
-        Проверка действительности ключа
-        :param key: string - ключ
-        :return: True - если ключ действителен(присутствует в словаре)
-        """
-        return key in self._Data.keys()
-
-    def is_data_empty(self):
-        """
-        Проверка конфигурационных данных на пустоту
-        :return: True - если данные отсутствуют, т.е. _Data = {}
-        """
-        return len(self._Data) == 0
 
 
 if __name__ == "__main__":

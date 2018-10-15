@@ -80,4 +80,5 @@ if __name__ == "__main__":
     'Открытие таблицы с помощью gspread согласно конфигурационным данным'
     a = GoogleTable(google_inst.get_gc(), table_config['URL'], table_config['Sheet'])
     'Получение списка из таблицы'
-    print(a.get_list(table_config['Col'], table_config['Rows'][0], table_config['Rows'][1]))
+    print(a.get_list(table_config['FIO_Col'], table_config['FIO_Rows'][0], table_config['FIO_Rows'][1]))
+    print(a.get_list(table_config['ID_Col'], table_config['ID_Rows'][0], table_config['ID_Rows'][1]))

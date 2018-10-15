@@ -1,4 +1,5 @@
 import gspread
+import os
 from oauth2client.service_account import ServiceAccountCredentials
 
 
@@ -14,8 +15,7 @@ class GoogleInstrument:
         :return: -
         """
         scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-        credentials = ServiceAccountCredentials.from_json_keyfile_name(
-            'resources/private key for GoogleAPI.json', scope)
+        credentials = ServiceAccountCredentials.from_json_keyfile_name(os.path.join("resources", "private key for GoogleAPI.json"), scope)
         self._GC = gspread.authorize(credentials)
 
     def get_gc(self):
