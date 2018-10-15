@@ -17,6 +17,16 @@ def get_name_by_id(id):
     if n:
         return n[0]
 
+def id_name_exist(id):
+    n = [name['name'] for name in names if name['id'] == id]
+    if n:
+        return True
+    else:
+        return False
+
+"""
+khgh
+"""
 def get_courses():
     return courses
 
@@ -24,3 +34,10 @@ def get_course_by_id(id):
     n=[name['name'] for name in names if name['id'] == id]
     if n:
         return n[0]
+
+def id_course_exist(id):
+    n = [name['name'] for name in courses if name['id'] == id]
+    if n:
+        return True
+    else:
+        return False

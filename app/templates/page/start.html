@@ -4,7 +4,7 @@
 {% if g.user %}
     <a href="{{ url_for('page.index') }}">Перейти к сводной таблице</a>
 {% else %}
-    Для продолжения необходимо <a href="{{ url_for('auth.login_stepic') }}">авторизоваться</a>
+    Чтобы перейти к сводной таблице необходимо <a href="{{ url_for('auth.login_stepic') }}">авторизоваться</a>
 {% endif %}
 
 {% endblock %}

@@ -20,10 +20,16 @@ def start_page():
 @bp.route('/students/<int:id>')
 @login_required
 def student_page(id:int):
-    return render_template('page/student.html')
+    if id_name_exist(id):
+        return render_template('page/student.html')
+    else:
+        return render_template('error/404.html')
 
 
 @bp.route('/courses/<int:id>')
 @login_required
 def course_page(id:int):
-    return render_template('page/course.html')
+    if id_course_exist(id):
+        return render_template('page/course.html')
+    else:
+        return render_template('error/404.html')

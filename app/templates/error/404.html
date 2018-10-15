@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Ошибка{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+Страница не найдена <br>
+    <a href="{{ url_for('page.start_page') }}">Перейти к главной странице</a>
+{% endblock %}

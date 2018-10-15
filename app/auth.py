@@ -48,7 +48,7 @@ def login():
         session['user_id'] = user_id
         return redirect(url_for('index'))
     else:
-        return render_template('page/error.html')
+        return render_template('error/401.html')
         print("Error:login: get code error")
 
 
@@ -90,7 +90,7 @@ def login_required(view):
     @functools.wraps(view)
     def wrapped_view(**kwargs):
         if g.user is None:
-            return redirect(url_for('page.start_page'))
+            return render_template('error/401.html')
 
         return view(**kwargs)
 
