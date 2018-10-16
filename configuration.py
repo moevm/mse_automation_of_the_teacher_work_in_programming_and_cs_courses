@@ -49,7 +49,7 @@ class Configuration:
         :return: элемент конфигурации
         """
         if self._Data:
-            if key in self._Data.keys():
+            if key in self._Data:
                 return self._Data[key]
             else:
                 print(f"Ключ недействителен: '{key}'")
