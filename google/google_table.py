@@ -1,21 +1,21 @@
+import gspread.exceptions
+
 from google import google_instr as g_instr
 import configuration as conf
-import gspread.exceptions
 
 
 class GoogleTable:
-
     Table = None
     Sheet = None
 
-    def __init__(self, gc, url, sheet=0):
+    def __init__(self, url, sheet=0):
         """
         :param gc: gspread - GoogleAPI
         :param url: string - ссылка на таблицу
         :param sheet: int/string - номер/название листа таблицы
         """
         try:
-            self.Table = gc.open_by_url(url)
+            self.Table = g_instr.GoogleInstrument().get_gc().open_by_url(url)
         except gspread.exceptions.NoValidUrlKeyFound:
             print("Не найден корректный ключ таблицы в URL, проверьте правильность ссылки на таблицу")
         else:
@@ -33,11 +33,15 @@ class GoogleTable:
         sh = None
         if type(sheet) is int:
             sh = self.Table.get_worksheet(sheet)
-        if type(sheet) is str:
+        elif type(sheet) is str:
             sh = self.Table.worksheet(sheet)
+        else:
+            print(f"Неверный формат sheet: {sheet}")
+
         if sh:
             self.Sheet = sh
         else:
+            self.Sheet = None
             print(f"Несуществующий лист таблицы: {sheet}")
 
     def get_column(self, num):
@@ -73,12 +77,10 @@ class GoogleTable:
 if __name__ == "__main__":
     'Создание(чтение) конфигурации'
     config = conf.Configuration()
-    'Создание gspread для работы с таблицей'
-    google_inst = g_instr.GoogleInstrument()
     'Получение конфигурационных данных о гугл-таблице'
     table_config = config.get_google_table_config()
     'Открытие таблицы с помощью gspread согласно конфигурационным данным'
-    a = GoogleTable(google_inst.get_gc(), table_config['URL'], table_config['Sheet'])
+    a = GoogleTable(table_config['URL'], table_config['Sheet'])
     'Получение списка из таблицы'
     print(a.get_list(table_config['FIO_Col'], table_config['FIO_Rows'][0], table_config['FIO_Rows'][1]))
     print(a.get_list(table_config['ID_Col'], table_config['ID_Rows'][0], table_config['ID_Rows'][1]))
