@@ -25,7 +25,7 @@ class TestInitConfiguration(unittest.TestCase):
         Корректное значение данных конфигурации
         """
         config = conf.Configuration(os.path.join("tests", "resources", "config.json"))
-        correct_data_config = {'google_table': {'URL': 'https://docs.google.com/spreadsheets/d/16I1mG_kMugBpnh_K23V_GTOWuN5hAEQG6OfOhIOlprA', 'Sheet': 0, 'FIO_Col': 1, 'FIO_Rows': [11, 21], 'ID_Col': 5, 'ID_Rows': [11, 21]}, 'stepic': {'id_course': 64, 'smth_info': 'information'}}
+        correct_data_config = {'google_table': {'URL': 'https://docs.google.com/spreadsheets/d/1t1szRuyb023sfuXLf6p-fDLmMcNtAmKfK0enj4URTxU', 'Sheet': 0, 'FIO_Col': 1, 'FIO_Rows': [11, 21], 'ID_Col': 5, 'ID_Rows': [11, 21]}, 'stepic': {'id_course': 64, 'smth_info': 'information'}}
         self.assertEqual(config.get_data(), correct_data_config)
 
     @ignore_warnings
@@ -90,7 +90,7 @@ class TestGetConfig(unittest.TestCase):
         Корректное значение конфигурации по ключу
         """
         config = conf.Configuration(os.path.join("tests", "resources", "config.json"))
-        correct_google = {'URL': 'https://docs.google.com/spreadsheets/d/16I1mG_kMugBpnh_K23V_GTOWuN5hAEQG6OfOhIOlprA', 'Sheet': 0, 'FIO_Col': 1, 'FIO_Rows': [11, 21], 'ID_Col': 5, 'ID_Rows': [11, 21]}
+        correct_google = {'URL': 'https://docs.google.com/spreadsheets/d/1t1szRuyb023sfuXLf6p-fDLmMcNtAmKfK0enj4URTxU', 'Sheet': 0, 'FIO_Col': 1, 'FIO_Rows': [11, 21], 'ID_Col': 5, 'ID_Rows': [11, 21]}
         correct_stepic = {'id_course': 64, 'smth_info': 'information'}
         self.assertEqual(config.get_google_table_config(), correct_google)
         self.assertEqual(config.get_config_by_key('google_table'), correct_google)
