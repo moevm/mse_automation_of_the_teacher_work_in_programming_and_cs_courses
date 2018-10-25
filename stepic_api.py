@@ -240,14 +240,38 @@ class StepicAPI:
         :param id: список id или один id курса
         :return: список json-ов или json курса
         """
+        try:
+            course = requests.get(api_url + 'course-grades?course=' + str(id)).json()
+            if type(id) is str:
+                with open(id + "statistic.json", "w") as js:
+                    json.dump(course, js, indent=4, sort_keys=True, ensure_ascii=False)
+            else:
+                for course_id in id:
+                    with open(course_id + "statistic.json", "w") as js:
+                        json.dump(course, js, indent=4, sort_keys=True, ensure_ascii=False)
+        except:
+            return None
 
         pass
 
+
     def get_course_info(self, id):
         """
-        возвращающает json или список json-ов с информацией курсе
+        возвращающает json или список json-ов с информацией о курсе
         api: https://stepik.org/api/courses/ID
         :param id: список id или один id курса
         :return: список json-ов или json курса
         """
+        try:
+            course = requests.get(api_url + 'courses/' + str(id)).json()
+            if type(id) is str:
+                with open(id + "info.json", "w") as js:
+                    json.dump(course, js, indent=4, sort_keys=True, ensure_ascii=False)
+            else:
+                for course_id in id:
+                    with open(course_id + "info.json", "w") as js:
+                        json.dump(course, js, indent=4, sort_keys=True, ensure_ascii=False)
+        except:
+            return None
+
         pass
