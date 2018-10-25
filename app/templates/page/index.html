@@ -18,8 +18,8 @@
 {% for n in names %}
 <tr>
     <td><a href="{{ url_for('page.student_page',id=n['id']) }}"> {{n['name_google']}} </a></td>
-    {%- for c in course %}
-    <td>0%</td>
+    {% for p in progress %}
+    <td>{{p[n['id']]}}%</td>
     {%- endfor %}
 </tr>
 {% endfor %}

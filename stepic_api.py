@@ -201,18 +201,21 @@ class StepicAPI:
         :return: title курса
         """
         if type(id) is str:
-            #try:
-            course = requests.get(self.url_api + 'courses/' + str(id)).json()['courses'][0]
-            return course['title']
-            #except:
-             #   return None
+            try:
+                a = requests.get(self.url_api + 'courses/' + str(id), headers=self._headers)
+                course=a.json()['courses'][0]
+                return course['title']
+            except Exception as e:
+                print(e)
+                return None
         else:
             courses_titles = []
             for course_id in id:
                 try:
-                    course = requests.get(self.url_api + 'courses/' + str(course_id)).json()['courses'][0]
+                    course = requests.get(self.url_api + 'courses/' + str(course_id), headers=self._headers).json()['courses'][0]
                     courses_titles.append(course['title'])
-                except:
+                except Exception as e:
+                    print(e)
                     courses_titles.append(None)
             return courses_titles
 
@@ -258,8 +261,10 @@ class StepicAPI:
         :return: список json-ов или json курса
         """
         try:
-            course = requests.get(self.url_api + 'course-grades?course=' + str(id), headers=self._headers).json()
-        except:
+            grades = requests.get(self.url_api + 'course-grades?course=' + str(id), headers=self._headers).json()['course-grades']
+            return grades
+        except Exception as e:
+            print(e)
             return None
 
 
@@ -287,4 +292,4 @@ class StepicAPI:
 
 if __name__=='__main__':
     a=StepicAPI()
-    print(a.get_course_name("1"))
+    print(a.get_course_name("37059"))

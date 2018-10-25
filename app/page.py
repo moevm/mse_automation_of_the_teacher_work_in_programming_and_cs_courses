@@ -4,15 +4,19 @@ from flask import (
 from InformationsProcessor import InformationsProcessor
 
 from app.auth import login_required
+from app.auth import stepic
 from app.all_info import *
 
 bp = Blueprint('page', __name__)
-get_info=InformationsProcessor()
+get_info=InformationsProcessor(stepic)
 
 @bp.route('/')
 @login_required
 def index():
-    return render_template('page/index.html', names=get_info.create_jsons_user(),course=get_info.create_jsons_course())
+    a=get_info.create_jsons_user()
+    b=get_info.create_jsons_course()
+    c=get_info.course_grades()
+    return render_template('page/index.html', names=a,course=b,progress=c)
 
 @bp.route('/start')
 def start_page():
