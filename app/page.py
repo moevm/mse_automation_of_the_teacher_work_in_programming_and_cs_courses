@@ -1,17 +1,18 @@
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, url_for,session,config
 )
+from InformationsProcessor import InformationsProcessor
 
 from app.auth import login_required
 from app.all_info import *
 
 bp = Blueprint('page', __name__)
-
+get_info=InformationsProcessor()
 
 @bp.route('/')
 @login_required
 def index():
-    return render_template('page/index.html', names=get_names(),course=get_courses())
+    return render_template('page/index.html', names=get_info.create_jsons_user(),course=get_info.create_jsons_course())
 
 @bp.route('/start')
 def start_page():

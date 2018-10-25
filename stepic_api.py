@@ -147,12 +147,12 @@ class StepicAPI:
             pass
 
     def get_user_name(self, id=None):
-    """
-    Вовзращает список full_name-ов для пользователей если id передается
-    Если id не передается, возвращается full_name текущего пользотеля
-    :param id: список id или один id пользователей
-    :return: list[full_name]
-    """
+        """
+        Вовзращает список full_name-ов для пользователей если id передается
+        Если id не передается, возвращается full_name текущего пользотеля
+        :param id: список id или один id пользователей
+        :return: list[full_name]
+        """
         if not id:
 
             if not self.current_user:
@@ -162,8 +162,9 @@ class StepicAPI:
             return self.current_user[0]['full_name']
         else:
             if type(id) is str:
+                print("1")
                 try:
-                    user = requests.get(api_url + 'users/' + str(id)).json()['users'][0]
+                    user = requests.get(self.url_api + 'users/' + str(id)).json()['users'][0]
                     return user['full_name']
                 except:
                     return None
@@ -171,7 +172,7 @@ class StepicAPI:
                 students_fn = []
                 for user_id in id:
                     try:
-                        user = requests.get(api_url + 'users/' + str(user_id)).json()['users'][0]
+                        user = requests.get(self.url_api + 'users/' + str(user_id)).json()['users'][0]
                         students_fn.append(user['full_name'])
                     except:
                         students_fn.append(None)
@@ -186,37 +187,34 @@ class StepicAPI:
         """
         if type(ids) is str:
             with open(ids+".json", "w") as f:
-                json.dump(get_user_name(ids), f, indent=4, sort_keys=True, ensure_ascii=False)
+                json.dump(self.get_user_name(ids), f, indent=4, sort_keys=True, ensure_ascii=False)
         else:
             for id in ids:
                 with open(id+".json", "w") as f:
-                    json.dump(get_user_name(id), f, indent=4, sort_keys=True, ensure_ascii=False)
+                    json.dump(self.get_user_name(id), f, indent=4, sort_keys=True, ensure_ascii=False)
 
-    def get_course_name(self, id=None):
+    def get_course_name(self, id):
         """
         возвращает title курса
         api: https://stepik.org/api/courses/
         :param id: список id или один id курса
         :return: title курса
         """
-        if not id:
+        if type(id) is str:
+            #try:
+            course = requests.get(self.url_api + 'courses/' + str(id)).json()['courses'][0]
+            return course['title']
+            #except:
+             #   return None
         else:
-            if type(id) is str:
+            courses_titles = []
+            for course_id in id:
                 try:
-                    course = requests.get(api_url + 'courses/' + str(id)).json()['courses'][0]
-                    return course['title']
+                    course = requests.get(self.url_api + 'courses/' + str(course_id)).json()['courses'][0]
+                    courses_titles.append(course['title'])
                 except:
-                    return None
-            else:
-                courses_titles = []
-                for course_id in id:
-                    try:
-                        course = requests.get(api_url + 'courses/' + str(course_id)).json()['courses'][0]
-                        courses_titles.append(course['title'])
-                    except:
-                        courses_titles.append(None)
-                return courses_titles
-        pass
+                    courses_titles.append(None)
+            return courses_titles
 
     """
         def get_course_learners_count(self, id):
@@ -260,18 +258,10 @@ class StepicAPI:
         :return: список json-ов или json курса
         """
         try:
-            course = requests.get(api_url + 'course-grades?course=' + str(id)).json()
-            if type(id) is str:
-                with open(id + "statistic.json", "w") as js:
-                    json.dump(course, js, indent=4, sort_keys=True, ensure_ascii=False)
-            else:
-                for course_id in id:
-                    with open(course_id + "statistic.json", "w") as js:
-                        json.dump(course, js, indent=4, sort_keys=True, ensure_ascii=False)
+            course = requests.get(self.url_api + 'course-grades?course=' + str(id), headers=self._headers).json()
         except:
             return None
 
-        pass
 
 
     def get_course_info(self, id):
@@ -293,4 +283,8 @@ class StepicAPI:
         except:
             return None
 
-        pass
+
+
+if __name__=='__main__':
+    a=StepicAPI()
+    print(a.get_course_name("1"))
