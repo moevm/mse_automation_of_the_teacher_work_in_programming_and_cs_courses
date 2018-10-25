@@ -292,4 +292,4 @@ class StepicAPI:
 
 if __name__=='__main__':
     a=StepicAPI()
-    print(a.get_course_name("37059"))
+    print(a.get_user_name("19679512"))

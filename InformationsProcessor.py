@@ -65,7 +65,7 @@ class InformationsProcessor:
                     if res:
                         res_dict.update(res[0])
                     else:
-                        res_dict.update({user: '0'})
+                        res_dict.update({user: 'Нет'})
                 result.append(res_dict)
 
             print(result)
@@ -77,7 +77,7 @@ class InformationsProcessor:
         for v in result.values():
             if v['is_passed']:
                 progress+=1
-        return {str(grade_user['user']):progress/len(result)*100}
+        return {str(grade_user['user']):str(progress/len(result)*100)+'%'}
 
 if __name__=="__main__":
     a=InformationsProcessor()
