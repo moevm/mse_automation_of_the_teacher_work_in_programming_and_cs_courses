@@ -22,6 +22,7 @@ class GoogleTable:
             try:
                 self.set_sheet(sheet)
             except gspread.exceptions.APIError:
+                self.Table = None
                 print("Ошибка google_api, проверьте правильность ссылки на таблицу")
 
     def set_sheet(self, sheet):
@@ -30,19 +31,22 @@ class GoogleTable:
         :param sheet: int/string - номер/название листа таблицы
         :return: -
         """
-        sh = None
+        if not self.Table:
+            self.Sheet = None
+            return
+
         if type(sheet) is int:
-            sh = self.Table.get_worksheet(sheet)
+            self.Sheet = self.Table.get_worksheet(sheet)
+            if not self.Sheet:
+                print(f"Несуществующий лист таблицы №{sheet}")
         elif type(sheet) is str:
-            sh = self.Table.worksheet(sheet)
+            try:
+                self.Sheet = self.Table.worksheet(sheet)
+            except gspread.exceptions.WorksheetNotFound:
+                self.Sheet = None
+                print(f"Несуществующий лист таблицы с именем '{sheet}'")
         else:
             print(f"Неверный формат sheet: {sheet}")
-
-        if sh:
-            self.Sheet = sh
-        else:
-            self.Sheet = None
-            print(f"Несуществующий лист таблицы: {sheet}")
 
     def get_column(self, num):
         """
