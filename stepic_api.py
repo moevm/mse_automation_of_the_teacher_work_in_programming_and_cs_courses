@@ -147,12 +147,12 @@ class StepicAPI:
             pass
 
     def get_user_name(self, id=None):
-        """
-        Вовзращает список dict-ов c last_name и first_name для пользователей если id передаетя
-        Если id не передается, возвращается full_nameтекущего пользотеля
-        :param id: список id или один id пользователей
-        :return: list[dict]
-        """
+    """
+    Вовзращает список full_name-ов для пользователей если id передается
+    Если id не передается, возвращается full_name текущего пользотеля
+    :param id: список id или один id пользователей
+    :return: list[full_name]
+    """
         if not id:
 
             if not self.current_user:
@@ -161,17 +161,36 @@ class StepicAPI:
                     return
             return self.current_user[0]['full_name']
         else:
-            pass
+            if type(id) is str:
+                try:
+                    user = requests.get(api_url + 'users/' + str(id)).json()['users'][0]
+                    return user['full_name']
+                except:
+                    return None
+            else:
+                students_fn = []
+                for user_id in id:
+                    try:
+                        user = requests.get(api_url + 'users/' + str(user_id)).json()['users'][0]
+                        students_fn.append(user['full_name'])
+                    except:
+                        students_fn.append(None)
+                return students_fn
 
-    def download_user(self, id):
+    def download_user(self, ids):
         """
         возвращающает json или список json-ов пользователей с id
         api: https://stepik.org/api/users/ID
-
         :param id: список id или один id пользователей
         :return: список json-ов или json пользотелей
         """
-        pass
+        if type(ids) is str:
+            with open(ids+".json", "w") as f:
+                json.dump(get_user_name(ids), f, indent=4, sort_keys=True, ensure_ascii=False)
+        else:
+            for id in ids:
+                with open(id+".json", "w") as f:
+                    json.dump(get_user_name(id), f, indent=4, sort_keys=True, ensure_ascii=False)
 
     def get_course_statistic(self, id):
         """
