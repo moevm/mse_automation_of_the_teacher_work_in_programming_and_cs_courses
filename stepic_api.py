@@ -192,6 +192,66 @@ class StepicAPI:
                 with open(id+".json", "w") as f:
                     json.dump(get_user_name(id), f, indent=4, sort_keys=True, ensure_ascii=False)
 
+    def get_course_name(self, id=None):
+        """
+        возвращает title курса
+        api: https://stepik.org/api/courses/
+        :param id: список id или один id курса
+        :return: title курса
+        """
+        if not id:
+        else:
+            if type(id) is str:
+                try:
+                    course = requests.get(api_url + 'courses/' + str(id)).json()['courses'][0]
+                    return course['title']
+                except:
+                    return None
+            else:
+                courses_titles = []
+                for course_id in id:
+                    try:
+                        course = requests.get(api_url + 'courses/' + str(course_id)).json()['courses'][0]
+                        courses_titles.append(course['title'])
+                    except:
+                        courses_titles.append(None)
+                return courses_titles
+        pass
+
+    """
+        def get_course_learners_count(self, id):
+            try:
+                course = requests.get(api_url + 'courses/' + str(id)).json()['courses'][0]
+                return course['learners_count']
+            except:
+                return None
+            pass
+
+        def get_course_certificates_count(self, id):
+            try:
+                course = requests.get(api_url + 'courses/' + str(id)).json()['courses'][0]
+                return course['certificates_count']
+            except:
+                return None
+            pass
+
+        def get_course_score(self, course_id, user_id):
+
+            Возвращает прогресс пользователя на курсе (кол-во полученных баллов)
+            :param self:
+            :param course_id: id курса
+            :param user_id: id пользователя
+            :return: кол-во баллов
+
+            try:
+                course = requests.get(api_url + + 'course-grades?course=' + str(course_id)  + '&user=' + str(user_id)).json()['course-grades'][0]
+                return course['score']
+            except:
+                return None
+
+            pass
+    """
+
     def get_course_statistic(self, id):
         """
         возвращающает json или список json-ов со статистикой о курсе
@@ -199,14 +259,38 @@ class StepicAPI:
         :param id: список id или один id курса
         :return: список json-ов или json курса
         """
+        try:
+            course = requests.get(api_url + 'course-grades?course=' + str(id)).json()
+            if type(id) is str:
+                with open(id + "statistic.json", "w") as js:
+                    json.dump(course, js, indent=4, sort_keys=True, ensure_ascii=False)
+            else:
+                for course_id in id:
+                    with open(course_id + "statistic.json", "w") as js:
+                        json.dump(course, js, indent=4, sort_keys=True, ensure_ascii=False)
+        except:
+            return None
 
         pass
 
+
     def get_course_info(self, id):
         """
-        возвращающает json или список json-ов с информацией курсе
+        возвращающает json или список json-ов с информацией о курсе
         api: https://stepik.org/api/courses/ID
         :param id: список id или один id курса
         :return: список json-ов или json курса
         """
+        try:
+            course = requests.get(api_url + 'courses/' + str(id)).json()
+            if type(id) is str:
+                with open(id + "info.json", "w") as js:
+                    json.dump(course, js, indent=4, sort_keys=True, ensure_ascii=False)
+            else:
+                for course_id in id:
+                    with open(course_id + "info.json", "w") as js:
+                        json.dump(course, js, indent=4, sort_keys=True, ensure_ascii=False)
+        except:
+            return None
+
         pass
