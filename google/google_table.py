@@ -1,29 +1,33 @@
-import gspread.exceptions
-
-from google import google_instr as g_instr
 import configuration as conf
+import os
+from oauth2client.service_account import ServiceAccountCredentials
+import gspread.exceptions
 
 
 class GoogleTable:
     Table = None
     Sheet = None
 
-    def __init__(self, url, sheet=0):
+    def __init__(self, url, sheet=0, key_path=os.path.join("resources", "private key for GoogleAPI.json")):
         """
-        :param gc: gspread - GoogleAPI
         :param url: string - ссылка на таблицу
         :param sheet: int/string - номер/название листа таблицы
+        :param key_path: путь к токену для работы с google_api
         """
-        try:
-            self.Table = g_instr.GoogleInstrument().get_gc().open_by_url(url)
-        except gspread.exceptions.NoValidUrlKeyFound:
-            print("Не найден корректный ключ таблицы в URL, проверьте правильность ссылки на таблицу")
-        else:
+        if os.path.exists(key_path):
+            gc = gspread.authorize(ServiceAccountCredentials.from_json_keyfile_name(key_path, ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']))
             try:
-                self.set_sheet(sheet)
-            except gspread.exceptions.APIError:
-                self.Table = None
-                print("Ошибка google_api, проверьте правильность ссылки на таблицу")
+                self.Table = gc.open_by_url(url)
+            except gspread.exceptions.NoValidUrlKeyFound:
+                print("Не найден корректный ключ таблицы в URL, проверьте правильность ссылки на таблицу")
+            else:
+                try:
+                    self.set_sheet(sheet)
+                except gspread.exceptions.APIError:
+                    self.Table = None
+                    print("Ошибка google_api, проверьте правильность ссылки на таблицу")
+        else:
+            print("Указанного пути к токену google_api не существует")
 
     def set_sheet(self, sheet):
         """
@@ -75,7 +79,7 @@ class GoogleTable:
         :return: [] - список значений ячеек требуемого диапазона строк из столбца
         """
         if self.Sheet:
-            return self.get_column(col)[row_from:row_to]
+            return self.get_column(col)[row_from-1:row_to-1]
 
 
 if __name__ == "__main__":
