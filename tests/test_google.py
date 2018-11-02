@@ -188,7 +188,7 @@ class TestGet(unittest.TestCase):
         """
         table = g_table.GoogleTable('https://docs.google.com/spreadsheets/d/1t1szRuyb023sfuXLf6p-fDLmMcNtAmKfK0enj4URTxU')
         self.assertEqual(table.get_row(1), ['ФИО', 'ID'])
-        self.assertEqual(table.get_list(1, 1, 10), ['Азаревич Артём', 'Афийчук И.И.', 'Гомонова Анастасия ', 'Григорьев И.С.', 'Иванов В.С.', 'Кухарев М.А.', 'Лавренкова Екатерина', 'Мейзер Д.В.', 'Михайлов Ю.А.'])
+        self.assertEqual(table.get_list(1, 2, 11), ['Азаревич Артём', 'Афийчук И.И.', 'Гомонова Анастасия ', 'Григорьев И.С.', 'Иванов В.С.', 'Кухарев М.А.', 'Лавренкова Екатерина', 'Мейзер Д.В.', 'Михайлов Ю.А.'])
 
     @ignore_warnings
     @mock.patch('sys.stdout')
