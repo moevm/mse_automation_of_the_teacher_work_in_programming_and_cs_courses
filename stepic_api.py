@@ -222,7 +222,7 @@ class StepicAPI:
     """
         def get_course_learners_count(self, id):
             try:
-                course = requests.get(api_url + 'courses/' + str(id)).json()['courses'][0]
+                course = requests.get(self.url_api  + 'courses/' + str(id), headers=self._headers).json()['courses'][0]
                 return course['learners_count']
             except:
                 return None
@@ -230,7 +230,7 @@ class StepicAPI:
 
         def get_course_certificates_count(self, id):
             try:
-                course = requests.get(api_url + 'courses/' + str(id)).json()['courses'][0]
+                course = requests.get(self.api_url + 'courses/' + str(id), headers=self._headers).json()['courses'][0]
                 return course['certificates_count']
             except:
                 return None
@@ -245,7 +245,7 @@ class StepicAPI:
             :return: кол-во баллов
 
             try:
-                course = requests.get(api_url + + 'course-grades?course=' + str(course_id)  + '&user=' + str(user_id)).json()['course-grades'][0]
+                course = requests.get(self.api_url + + 'course-grades?course=' + str(course_id)  + '&user=' + str(user_id), headers=self._headers).json()['course-grades'][0]
                 return course['score']
             except:
                 return None
@@ -277,7 +277,7 @@ class StepicAPI:
         :return: список json-ов или json курса
         """
         try:
-            course = requests.get(api_url + 'courses/' + str(id)).json()
+            course = requests.get(self.api_url + 'courses/' + str(id), headers=self._headers).json()
             if type(id) is str:
                 with open(id + "info.json", "w") as js:
                     json.dump(course, js, indent=4, sort_keys=True, ensure_ascii=False)
