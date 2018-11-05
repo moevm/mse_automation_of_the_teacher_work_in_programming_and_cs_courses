@@ -12,6 +12,8 @@
 4. Запросить у участника проекта доступ к google api (получить токен) и поместить в папку resources
 5. Запустить приложение с помощью run.bat/run.sh
 ## Презентации
-[Этап1](https://github.com/moevm/mse_automation_of_the_teacher_work_in_programming_and_cs_courses/raw/master/%D0%9F%D1%80%D0%BE%D0%B5%D0%BA%D1%824_%D0%AD%D1%82%D0%B0%D0%BF1.pptx)
+[Этап1](https://github.com/moevm/mse_automation_of_the_teacher_work_in_programming_and_cs_courses/raw/master/Presentations/%D0%9F%D1%80%D0%BE%D0%B5%D0%BA%D1%824_%D0%AD%D1%82%D0%B0%D0%BF1.pptx)
 ## Демонстрация
 [Этап1](https://youtu.be/miiINJJ0cvg)
+## Скриншоты
+[Открыть](https://github.com/moevm/mse_automation_of_the_teacher_work_in_programming_and_cs_courses/raw/master/Screenshots)
