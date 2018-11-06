@@ -1,14 +1,15 @@
-import requests
 import json
 import os
 
+import requests
 
 def get_current_user(token):
     res = requests.get('https://stepik.org/api/stepics/1', header=f'Authorization: Bearer {token}')
 
 
 class StepicAPI:
-    def __init__(self, file_client='stepic_client.json'):
+    def __init__(self, file_client=os.path.join('resources','stepic_client.json')):
+        print(os.path.abspath(os.curdir))
         self.url_api = 'https://stepik.org/api/'
         self.url_auth = "https://stepik.org/oauth2/"
         self.client_id, self.client_secret = self.load_client(file_client)

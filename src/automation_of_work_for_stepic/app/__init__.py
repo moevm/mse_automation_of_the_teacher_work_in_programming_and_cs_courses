@@ -2,7 +2,6 @@ import os
 
 from flask import Flask
 
-
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
@@ -35,3 +34,13 @@ def create_app(test_config=None):
     app.add_url_rule('/', endpoint='index')
 
     return app
+
+
+
+def run():
+    app=create_app()
+    from . import db
+    app.debug=True
+    db.init_db_command()
+    app.run(host='127.0.0.1:', port='5000')
+    print("app running")

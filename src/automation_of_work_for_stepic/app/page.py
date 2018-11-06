@@ -1,11 +1,11 @@
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, url_for,session,config
+    Blueprint, render_template
 )
-from InformationsProcessor import InformationsProcessor
 
-from app.auth import login_required
-from app.auth import stepic
-from app.all_info import *
+from automation_of_work_for_stepic.InformationsProcessor import InformationsProcessor
+from automation_of_work_for_stepic.app.auth import login_required,stepic
+
+
 
 bp = Blueprint('page', __name__)
 get_info=InformationsProcessor(stepic)
