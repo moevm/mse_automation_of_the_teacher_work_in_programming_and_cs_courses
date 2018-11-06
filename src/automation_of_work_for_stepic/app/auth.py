@@ -1,11 +1,12 @@
 import functools
 
 from flask import (
-    Blueprint, g, redirect, render_template, request, session, url_for,config
+    Blueprint, g, redirect, render_template, request, session, url_for
 )
 from flask import current_app as app
-from app.db import get_db
-from stepic_api import StepicAPI
+
+from automation_of_work_for_stepic.app.db import get_db
+from automation_of_work_for_stepic.stepic_api import StepicAPI
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 stepic = StepicAPI()

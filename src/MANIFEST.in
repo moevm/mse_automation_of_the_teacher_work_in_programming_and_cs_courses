@@ -1,0 +1,6 @@
+include app/schema.sql
+graft app/static
+graft app/templates
+graft resources
+graft tests/resources
+global-exclude *.pyc

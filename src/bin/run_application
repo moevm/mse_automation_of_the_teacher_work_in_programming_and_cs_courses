@@ -1,0 +1,11 @@
+
+import os
+
+os.chdir(os.path.join('C:\\','Users','nosov','PycharmProjects','autocheck_stepic','src'))
+
+from automation_of_work_for_stepic.app import create_app
+
+my_app = create_app()
+
+if __name__ == '__main__':
+    my_app.run()
