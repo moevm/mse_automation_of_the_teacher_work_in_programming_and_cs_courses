@@ -1,4 +1,4 @@
-
+import argparse
 import os
 
 os.chdir(os.path.join('C:\\','Users','nosov','PycharmProjects','autocheck_stepic','src'))
@@ -7,5 +7,24 @@ from automation_of_work_for_stepic.app import create_app
 
 my_app = create_app()
 
+file_needs_for_app=['stepic_client.json','private key for GoogleAPI.json.example','config.json']
+
+def correct_path(path:str):
+    if os.path.isdir(path) and all([os.path.isfile(os.path.join(path,file)) for file in file_needs_for_app]):
+        return path
+    else:
+        raise argparse.ArgumentTypeError("Необходимо указать путь к папке, содержащий все необходимые данные для запуска приложения")
+
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(
+        description='Run application for automation of work for stepic.',
+        epilog='')
+
+    parser.add_argument(
+        'directory',
+        help='the path to the resources folder',
+        type=correct_path,)
+
+    args = parser.parse_args()
+    os.chdir(args.directory)
     my_app.run()
