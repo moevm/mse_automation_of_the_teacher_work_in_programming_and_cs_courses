@@ -1,7 +1,9 @@
 import json
 import os
 
+from automation_of_work_for_stepic.utility import singleton
 
+@singleton
 class Configuration:
     _Data = {}
 
