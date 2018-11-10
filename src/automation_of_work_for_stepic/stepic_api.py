@@ -3,13 +3,14 @@ import os
 
 import requests
 
+from automation_of_work_for_stepic.utility import singleton
+
 def get_current_user(token):
     res = requests.get('https://stepik.org/api/stepics/1', header=f'Authorization: Bearer {token}')
 
-
+@singleton
 class StepicAPI:
     def __init__(self, file_client=os.path.join('resources','stepic_client.json')):
-        print(os.path.abspath(os.curdir))
         self.url_api = 'https://stepik.org/api/'
         self.url_auth = "https://stepik.org/oauth2/"
         self.client_id, self.client_secret = self.load_client(file_client)
@@ -77,17 +78,17 @@ class StepicAPI:
         print(f"Error: client id: file {path} has wrong structure")
         return None, None
 
-    def load_token(self, path: str = os.path.join('instance','token.json')):
+    def load_token(self, path: str = os.path.join('instance')):
         """
         Загружает токен из файла. Если загрузка удалась, то возращает True, инача - False
         :param path: путь к токену
         :return: Bool
         """
-        if not os.path.exists(path):
+        if not os.path.exists(os.path.join(path,'token.json')):
             print("Error: load token: path not found")
             return False
 
-        with open(path,'r') as f:
+        with open(os.path.join(path,'token.json'),'r') as f:
             data = json.load(f)
 
         if data and 'access_token' in data and 'token_type' in data:
@@ -96,10 +97,10 @@ class StepicAPI:
             self.token_type = data['token_type']
             return True
         else:
-            (f"Error: load token: file {path} has wrong structure")
+            (f"Error: load token: file {os.path.join(path,'token.json')} has wrong structure")
             return False
 
-    def save_token(self, path: str = os.path.join('instance','token.json')):
+    def save_token(self, path: str = os.path.join('instance')):
         """
         Созраняет токен в файл
         :param path:
@@ -107,7 +108,7 @@ class StepicAPI:
         """
         print(self.response_token)
         if path:
-            with open(path, 'w') as outfile:
+            with open(os.path.join(path,'token.json'), 'w') as outfile:
                 json.dump(self.response_token, outfile)
 
     @property
