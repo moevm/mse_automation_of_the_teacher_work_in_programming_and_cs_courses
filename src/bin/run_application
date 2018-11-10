@@ -1,6 +1,5 @@
 import argparse
 import os
-
 #os.chdir(os.path.join('C:\\', 'Users', 'nosov', 'PycharmProjects', 'autocheck_stepic', 'src'))
 
 file_needs_for_app = ['stepic_client.json', 'private key for GoogleAPI.json', 'config.json']
@@ -25,10 +24,11 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     dir=args.directory
-    #os.chdir(dir)
+
     from automation_of_work_for_stepic.stepic_api import StepicAPI
     from automation_of_work_for_stepic.configuration import Configuration
     from automation_of_work_for_stepic.google.google_table import GoogleTable
+
     StepicAPI(os.path.join(dir,file_needs_for_app[0]))
     Configuration(os.path.join(dir,file_needs_for_app[2]))
     GoogleTable(os.path.join(dir,file_needs_for_app[1]))
