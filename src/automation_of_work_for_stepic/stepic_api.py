@@ -66,7 +66,7 @@ class StepicAPI:
         :return: (client_id, secret_key)
         """
         if not os.path.exists(path):
-            print("Error: load client: path not found")
+            print(f"Error: load client: path {path} not found")
             return None, None
 
         with open(path) as f:
@@ -85,7 +85,7 @@ class StepicAPI:
         :return: Bool
         """
         if not os.path.exists(os.path.join(path,'token.json')):
-            print("Error: load token: path not found")
+            print(f"Error: load token: path {path} not found")
             return False
 
         with open(os.path.join(path,'token.json'),'r') as f:
