@@ -29,7 +29,7 @@ def login():
         stepic.init_token(code, redirect_uri)
 
         if app.config['ENV'] == 'development':
-            stepic.save_token()
+            stepic.save_token(app.instance_path)
 
         #сохраняем пользователя в базу
         db = get_db()
@@ -111,7 +111,7 @@ def login_dev():
     Авторизация пользователя через степик  в режиме разработчика
     :return:
     """
-    if stepic.load_token():
+    if stepic.load_token(app.instance_path):
         # сохраняем пользователя в базу
         db = get_db()
         user_id = stepic.get_user_id()

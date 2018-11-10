@@ -12,7 +12,9 @@ class InformationsProcessor:
     def download_users(self):
         table_config = self.config.get_google_table_config()
         'Открытие таблицы с помощью gspread согласно конфигурационным данным'
-        a = GoogleTable(table_config['URL'], table_config['Sheet'])
+        a = GoogleTable()
+        a.set_table(table_config['URL'], table_config['Sheet'])
+
         google_names = a.get_list(table_config['FIO_Col'], table_config['FIO_Rows'][0], table_config['FIO_Rows'][1])
         ids = a.get_list(table_config['ID_Col'], table_config['ID_Rows'][0], table_config['ID_Rows'][1])
 
