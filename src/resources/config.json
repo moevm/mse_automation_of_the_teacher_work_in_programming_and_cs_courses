@@ -3,12 +3,12 @@
   "google_table": {
     "URL": "https://docs.google.com/spreadsheets/d/1EHcRIMpvnCul9axOdRxbIGDsfQYjimcVVsQqoeBYN4g",
     "Sheet": 0,
-    "FIO_Col": 1,
+    "FIO_Col": "a",
     "FIO_Rows": [
       2,
       8
     ],
-    "ID_Col": 2,
+    "ID_Col": "B",
     "ID_Rows": [
       2,
       8

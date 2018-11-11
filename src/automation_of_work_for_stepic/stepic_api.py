@@ -1,6 +1,5 @@
 import json
 import os
-
 import requests
 
 from automation_of_work_for_stepic.utility import singleton
@@ -270,28 +269,81 @@ class StepicAPI:
             return None
 
 
-
-    def get_course_info(self, id):
+    def course_info_to_json(self, id):
         """
-        возвращающает json или список json-ов с информацией о курсе
-        api: https://stepik.org/api/courses/ID
-        :param id: список id или один id курса
-        :return: список json-ов или json курса
+        Сохраняет информацию по курсу(ам) в json(-ы)
+        :param id: str/[str] - индекс / список индексов курса
+        :return: True/False - успешная/неуспешная запись
         """
         try:
-            course = requests.get(self.api_url + 'courses/' + str(id), headers=self._headers).json()
             if type(id) is str:
-                with open(id + "info.json", "w") as js:
-                    json.dump(course, js, indent=4, sort_keys=True, ensure_ascii=False)
+                with open(os.path.join("instance", str(id)+"_info.json"), "w") as js:
+                    json.dump(self.get_course_info(id), js, indent=4, sort_keys=True, ensure_ascii=False)
             else:
                 for course_id in id:
-                    with open(course_id + "info.json", "w") as js:
-                        json.dump(course, js, indent=4, sort_keys=True, ensure_ascii=False)
+                    with open(os.path.join("instance", str(course_id)+"_info.json"), "w") as js:
+                        json.dump(self.get_course_info(course_id), js, indent=4, sort_keys=True, ensure_ascii=False)
+            return True
         except:
-            return None
+            return False
+
+    def get_course_info(self, course_id):
+        """
+        Получает информацию о курсе
+        :param course_id: str - индекс курса
+        :return: {}, содержащий название, id и список секций/модулей курса
+        """
+        course = requests.get(self.url_api + 'courses/' + str(course_id), headers=self._headers).json()["courses"][0]
+        info_sections = []
+        for section_id in course['sections']:
+            info_sections.append(self.get_section_info(section_id))
+        return {
+            "title": course['title'],
+            "id": course['id'],
+            "sections of course": info_sections
+        }
+
+    def get_section_info(self, section_id):
+        """
+        Получает информацию о секции/модуле курса
+        :param section_id: str - индекс секции/модуля
+        :return: {}, содержащий название, id и список уроков секции/модуля
+        """
+        section = requests.get(self.url_api + 'sections/' + str(section_id), headers=self._headers).json()['sections'][0]
+        lessons = []
+        for unit_id in section['units']:
+            lessons.append(self.get_unit_info(unit_id))
+        return {
+            "title": section['title'],
+            "id": section['id'],
+            "lessons of section": lessons
+        }
+
+    def get_unit_info(self, unit_id):
+        """
+        Получает информацию о блоке
+        :param unit_id: str - индекс блока
+        :return: {}, содержащий информацию об уроке блока
+        """
+        unit = requests.get(self.url_api + 'units/' + str(unit_id), headers=self._headers).json()['units'][0]
+        return self.get_lesson_info(str(unit['lesson']))
+
+    def get_lesson_info(self, lesson_id):
+        """
+        Получает информацию об уроке
+        :param lesson_id: str - индекс урока
+        :return: {}, содержащий информацию об уроке блока
+        """
+        lesson = requests.get(self.url_api + 'lessons/' + str(lesson_id), headers=self._headers).json()['lessons'][0]
+        return {
+           "title": lesson['title'],
+            "id": lesson['id'],
+            "steps of lesson": lesson['steps']
+        }
 
 
+if __name__ == '__main__':
+    a = StepicAPI()
+    a.load_token()
+    a.course_info_to_json(['37059', '67'])
 
-if __name__=='__main__':
-    a=StepicAPI()
-    print(a.get_user_name("19679512"))

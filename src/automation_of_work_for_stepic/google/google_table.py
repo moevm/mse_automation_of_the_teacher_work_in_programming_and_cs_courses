@@ -2,6 +2,7 @@ import os
 
 from oauth2client.service_account import ServiceAccountCredentials
 import gspread.exceptions
+import gspread.utils
 
 from automation_of_work_for_stepic import configuration as conf
 from automation_of_work_for_stepic.utility import singleton
@@ -64,14 +65,27 @@ class GoogleTable:
         else:
             print(f"Неверный формат sheet: {sheet}")
 
-    def get_column(self, num):
+    def get_column(self, col):
         """
         Геттер столбца
-        :param num: int - номер требуемого столбца
+        :param col: int/str - номер/название требуемого столбца
         :return: [] - список значений всех ячеек столбца
         """
         if self.Sheet:
-            return self.Sheet.col_values(num)
+            if type(col) is int:
+                try:
+                    return self.Sheet.col_values(col)
+                except gspread.exceptions.IncorrectCellLabel:
+                    print(f"Некорректный номер столбца: {col}")
+            elif type(col) is str:
+                try:
+                    return self.Sheet.col_values(gspread.utils.a1_to_rowcol(col + "1")[1])
+                except gspread.exceptions.APIError:
+                    print(f"Ошибка GoogleAPI, проверьте правильность имени столбца: '{col}'")
+                except gspread.exceptions.IncorrectCellLabel:
+                    print(f"Некорректное имя столбца: '{col}' (Проверьте раскладку клавиатуры)")
+            else:
+                print(f"Неверный формат col(столбца): {col}")
 
     def get_row(self, num):
         """
@@ -91,7 +105,9 @@ class GoogleTable:
         :return: [] - список значений ячеек требуемого диапазона строк из столбца
         """
         if self.Sheet:
-            return self.get_column(col)[row_from-1:row_to-1]
+            all_rows = self.get_column(col)
+            if all_rows:
+                return all_rows[row_from-1:row_to-1]
 
 
 if __name__ == "__main__":
