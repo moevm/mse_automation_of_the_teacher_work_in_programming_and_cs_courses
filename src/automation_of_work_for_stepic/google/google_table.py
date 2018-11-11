@@ -1,3 +1,4 @@
+import configuration as conf
 import os
 
 from oauth2client.service_account import ServiceAccountCredentials
@@ -5,32 +6,42 @@ import gspread.exceptions
 import gspread.utils
 
 from automation_of_work_for_stepic import configuration as conf
+from automation_of_work_for_stepic.utility import singleton
 
-
+@singleton
 class GoogleTable:
     Table = None
     Sheet = None
 
-    def __init__(self, url, sheet=0, key_path=os.path.join("resources", "private key for GoogleAPI.json")):
+    def __init__(self, key_path=os.path.join("private key for GoogleAPI.json")):
         """
         :param url: string - ссылка на таблицу
         :param sheet: int/string - номер/название листа таблицы
         :param key_path: путь к токену для работы с google_api
         """
         if os.path.exists(key_path):
-            gc = gspread.authorize(ServiceAccountCredentials.from_json_keyfile_name(key_path, ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']))
-            try:
-                self.Table = gc.open_by_url(url)
-            except gspread.exceptions.NoValidUrlKeyFound:
-                print("Не найден корректный ключ таблицы в URL, проверьте правильность ссылки на таблицу")
-            else:
-                try:
-                    self.set_sheet(sheet)
-                except gspread.exceptions.APIError:
-                    self.Table = None
-                    print("Ошибка google_api, проверьте правильность ссылки на таблицу")
+            self.gc = gspread.authorize(ServiceAccountCredentials.from_json_keyfile_name(key_path, ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']))
+            self.Table=None
         else:
             print("Указанного пути к токену google_api не существует")
+
+    def set_table(self,url, sheet=0):
+        """
+        Установка параметров таблицы
+        :param url: string - ссылка на таблицу
+        :param sheet: int/string - номер/название листа таблицы
+        :return: None
+        """
+        try:
+            self.Table = self.gc.open_by_url(url)
+        except gspread.exceptions.NoValidUrlKeyFound:
+            print("Не найден корректный ключ таблицы в URL, проверьте правильность ссылки на таблицу")
+        else:
+            try:
+                self.set_sheet(sheet)
+            except gspread.exceptions.APIError:
+                self.Table = None
+                print("Ошибка google_api, проверьте правильность ссылки на таблицу")
 
     def set_sheet(self, sheet):
         """
@@ -106,7 +117,8 @@ if __name__ == "__main__":
     'Получение конфигурационных данных о гугл-таблице'
     table_config = config.get_google_table_config()
     'Открытие таблицы с помощью gspread согласно конфигурационным данным'
-    a = GoogleTable(table_config['URL'], table_config['Sheet'])
+    a = GoogleTable()
+    a.set_table(table_config['URL'], table_config['Sheet'])
     'Получение списка из таблицы'
     print(a.get_list(table_config['FIO_Col'], table_config['FIO_Rows'][0], table_config['FIO_Rows'][1]))
     print(a.get_list(table_config['ID_Col'], table_config['ID_Rows'][0], table_config['ID_Rows'][1]))

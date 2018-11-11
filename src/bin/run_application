@@ -1,11 +1,38 @@
-
+import argparse
 import os
+#os.chdir(os.path.join('C:\\', 'Users', 'nosov', 'PycharmProjects', 'autocheck_stepic', 'src'))
 
-os.chdir(os.path.join('C:\\','Users','nosov','PycharmProjects','autocheck_stepic','src'))
+file_needs_for_app = ['stepic_client.json', 'private key for GoogleAPI.json', 'config.json']
 
-from automation_of_work_for_stepic.app import create_app
+def correct_path(path: str):
+    if os.path.isdir(path) and all([os.path.isfile(os.path.join(path, file)) for file in file_needs_for_app]):
+        return path
+    else:
+        raise argparse.ArgumentTypeError(
+            f"Error: run_applications: the path {path} must specify the directory with \n {[i for i in file_needs_for_app]}")
 
-my_app = create_app()
 
 if __name__ == '__main__':
-    my_app.run()
+    parser = argparse.ArgumentParser(
+        description='Run application for automation of work for stepic.',
+        epilog='')
+
+    parser.add_argument(
+        'directory',
+        help=f'the path to the resources folder (with \n {[i for i in file_needs_for_app]}',
+        type=correct_path)
+
+    args = parser.parse_args()
+    dir=args.directory
+
+    from automation_of_work_for_stepic.stepic_api import StepicAPI
+    from automation_of_work_for_stepic.configuration import Configuration
+    from automation_of_work_for_stepic.google.google_table import GoogleTable
+
+    StepicAPI(os.path.join(dir,file_needs_for_app[0]))
+    Configuration(os.path.join(dir,file_needs_for_app[2]))
+    GoogleTable(os.path.join(dir,file_needs_for_app[1]))
+
+
+    from automation_of_work_for_stepic.app import create_app
+    create_app().run()

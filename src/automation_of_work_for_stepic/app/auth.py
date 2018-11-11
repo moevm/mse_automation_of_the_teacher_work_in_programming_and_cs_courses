@@ -5,7 +5,7 @@ from flask import (
 )
 from flask import current_app as app
 
-from automation_of_work_for_stepic.app.db import get_db
+#from automation_of_work_for_stepic.app.db import get_db
 from automation_of_work_for_stepic.stepic_api import StepicAPI
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
@@ -29,20 +29,19 @@ def login():
         stepic.init_token(code, redirect_uri)
 
         if app.config['ENV'] == 'development':
-            stepic.save_token()
-
-        #сохраняем пользователя в базу
-        db = get_db()
+            stepic.save_token(app.instance_path)
         user_id = stepic.get_user_id()
-        user = db.execute(
-            'SELECT * FROM user WHERE username = ?', (user_id,)
-        ).fetchone()
+        #сохраняем пользователя в базу
+        #db = get_db()
+        #user = db.execute(
+        #    'SELECT * FROM user WHERE username = ?', (user_id,)
+        #).fetchone()
 
-        if user is None:
-            db.execute(
-                'INSERT INTO user (username, password) VALUES (?, ?)',
-                (user_id, ' '))
-            db.commit()
+        #if user is None:
+        #    db.execute(
+        #        'INSERT INTO user (username, password) VALUES (?, ?)',
+        #        (user_id, ' '))
+        #    db.commit()
 
         #очищаем ссесию
         session.clear()
@@ -111,20 +110,9 @@ def login_dev():
     Авторизация пользователя через степик  в режиме разработчика
     :return:
     """
-    if stepic.load_token():
-        # сохраняем пользователя в базу
-        db = get_db()
+    if stepic.load_token(app.instance_path):
+
         user_id = stepic.get_user_id()
-        user = db.execute(
-            'SELECT * FROM user WHERE username = ?', (user_id,)
-        ).fetchone()
-
-        if user is None:
-            db.execute(
-                'INSERT INTO user (username, password) VALUES (?, ?)',
-                (user_id, ' '))
-            db.commit()
-
         # очищаем ссесию
         session.clear()
         session['user_id'] = user_id
