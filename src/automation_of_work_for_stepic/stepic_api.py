@@ -293,15 +293,18 @@ class StepicAPI:
         :param course_id: str - индекс курса
         :return: {}, содержащий название, id и список секций/модулей курса
         """
-        course = requests.get(self.url_api + 'courses/' + str(course_id), headers=self._headers).json()["courses"][0]
-        info_sections = []
-        for section_id in course['sections']:
-            info_sections.append(self.get_section_info(section_id))
-        return {
-            "title": course['title'],
-            "id": course['id'],
-            "sections of course": info_sections
-        }
+        try:
+            course = requests.get(self.url_api + 'courses/' + str(course_id), headers=self._headers).json()["courses"][0]
+            info_sections = []
+            for section_id in course['sections']:
+                info_sections.append(self.get_section_info(section_id))
+            return {
+                "title": course['title'],
+                "id": course['id'],
+                "sections of course": info_sections
+            }
+        except:
+            print(f"Error in function get_course_info(course_id={course_id})")
 
     def get_section_info(self, section_id):
         """
@@ -309,15 +312,18 @@ class StepicAPI:
         :param section_id: str - индекс секции/модуля
         :return: {}, содержащий название, id и список уроков секции/модуля
         """
-        section = requests.get(self.url_api + 'sections/' + str(section_id), headers=self._headers).json()['sections'][0]
-        lessons = []
-        for unit_id in section['units']:
-            lessons.append(self.get_unit_info(unit_id))
-        return {
-            "title": section['title'],
-            "id": section['id'],
-            "lessons of section": lessons
-        }
+        try:
+            section = requests.get(self.url_api + 'sections/' + str(section_id), headers=self._headers).json()['sections'][0]
+            lessons = []
+            for unit_id in section['units']:
+                lessons.append(self.get_unit_info(unit_id))
+            return {
+                "title": section['title'],
+                "id": section['id'],
+                "lessons of section": lessons
+            }
+        except:
+            print(f"Error in function get_section_info(section_id={section_id})")
 
     def get_unit_info(self, unit_id):
         """
@@ -325,8 +331,11 @@ class StepicAPI:
         :param unit_id: str - индекс блока
         :return: {}, содержащий информацию об уроке блока
         """
-        unit = requests.get(self.url_api + 'units/' + str(unit_id), headers=self._headers).json()['units'][0]
-        return self.get_lesson_info(str(unit['lesson']))
+        try:
+            unit = requests.get(self.url_api + 'units/' + str(unit_id), headers=self._headers).json()['units'][0]
+            return self.get_lesson_info(str(unit['lesson']))
+        except:
+            print(f"Error in function get_unit_info(unit_id={unit_id})")
 
     def get_lesson_info(self, lesson_id):
         """
@@ -334,12 +343,15 @@ class StepicAPI:
         :param lesson_id: str - индекс урока
         :return: {}, содержащий информацию об уроке блока
         """
-        lesson = requests.get(self.url_api + 'lessons/' + str(lesson_id), headers=self._headers).json()['lessons'][0]
-        return {
-           "title": lesson['title'],
-            "id": lesson['id'],
-            "steps of lesson": lesson['steps']
-        }
+        try:
+            lesson = requests.get(self.url_api + 'lessons/' + str(lesson_id), headers=self._headers).json()['lessons'][0]
+            return {
+                "title": lesson['title'],
+                "id": lesson['id'],
+                "steps of lesson": lesson['steps']
+            }
+        except:
+            print(f"Error in finction get_lesson_info(lesson_id={lesson_id})")
 
 
 if __name__ == '__main__':
