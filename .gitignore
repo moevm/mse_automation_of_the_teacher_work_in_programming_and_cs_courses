@@ -2,3 +2,5 @@ src/.idea
 src/instance
 src/resources/private key for GoogleAPI.json
 src/resources/stepic_client.json
+src/automation_of_work_for_stepic_distro.egg-info
+__pycache__
