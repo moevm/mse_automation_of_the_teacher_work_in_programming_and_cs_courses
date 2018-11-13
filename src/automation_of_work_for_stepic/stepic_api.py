@@ -289,7 +289,7 @@ class StepicAPI:
 
     def get_course_info(self, course_id):
         """
-        Получает информацию о курсе
+        Получает информацию о курсе (структура курса)
         :param course_id: str - индекс курса
         :return: {}, содержащий название, id и список секций/модулей курса
         """
@@ -344,6 +344,16 @@ class StepicAPI:
 
 if __name__ == '__main__':
     a = StepicAPI()
-    a.load_token()
-    a.course_info_to_json(['37059', '67'])
+    a.load_token('C:\\Users\\nosov\PycharmProjects\\autocheck_stepic\\src\\instance')
+    b=a.get_course_statistic('37059')
+    print(b)
+    for m in b:
+        for k,v in m.items():
+            print(k,':',v)
+            if type(v) == type({}):
+                for k1, v2 in v.items():
+                    print('\t',k1, ':', v2)
+        #if type(v) == type([]):
+        #    for i in v:
+        #        print(i)
 
