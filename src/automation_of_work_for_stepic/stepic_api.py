@@ -1,7 +1,7 @@
 import json
 import os
 import requests
-
+from datetime import datetime
 from automation_of_work_for_stepic.utility import singleton
 
 def get_current_user(token):
@@ -220,39 +220,6 @@ class StepicAPI:
                     courses_titles.append(None)
             return courses_titles
 
-    """
-        def get_course_learners_count(self, id):
-            try:
-                course = requests.get(self.url_api  + 'courses/' + str(id), headers=self._headers).json()['courses'][0]
-                return course['learners_count']
-            except:
-                return None
-            pass
-
-        def get_course_certificates_count(self, id):
-            try:
-                course = requests.get(self.api_url + 'courses/' + str(id), headers=self._headers).json()['courses'][0]
-                return course['certificates_count']
-            except:
-                return None
-            pass
-
-        def get_course_score(self, course_id, user_id):
-
-            Возвращает прогресс пользователя на курсе (кол-во полученных баллов)
-            :param self:
-            :param course_id: id курса
-            :param user_id: id пользователя
-            :return: кол-во баллов
-
-            try:
-                course = requests.get(self.api_url + + 'course-grades?course=' + str(course_id)  + '&user=' + str(user_id), headers=self._headers).json()['course-grades'][0]
-                return course['score']
-            except:
-                return None
-
-            pass
-    """
 
     def get_course_statistic(self, id):
         """
@@ -351,6 +318,51 @@ class StepicAPI:
             }
         except:
             print(f"Error in finction get_lesson_info(lesson_id={lesson_id})")
+
+
+    def get_date_of_first_correct_sol(self, step_id):
+        """
+        Принимает на вход id степа и возвращает дату первого удачного решения в формате datetime
+        :param step_id: id степа
+        :return: datetime object - дата первого удачного решения
+        """
+        step_submissions = requests.get(self.url_api + 'submissions?status=correct&step=' + str(step_id), headers=self._headers).json()['submissions']
+        date = datetime.strptime(str(step_submissions[0]['time']), '%Y-%m-%dT%H:%M:%SZ')
+        return date
+
+    def get_date_of_first_wrong_sol(self, step_id):
+        """
+        Принимает на вход id степа и возвращает дату первого неудачного решения в формате datetime
+        :param step_id: id степа
+        :return: datetime object - дата первого неудачного решения
+        """
+        step_submissions = requests.get(self.url_api + 'submissions?status=wrong&step=' + str(step_id), headers=self._headers).json()['submissions']
+        date = datetime.strptime(str(step_submissions[0]['time']), '%Y-%m-%dT%H:%M:%SZ')
+        return date
+
+    def get_date_of_first_correct_sol_for_student(self, step_id, student_id):
+        """
+        Возвращает дату первого удачного решения степа студентом
+        :param step_id: id степа
+        :param student_id: id студента
+        :return: datetime object - дата первого удачного решения студента
+        """
+        step_submissions = requests.get(self.url_api + 'submissions?status=correct&step=' + str(step_id) + '&user=' + str(student_id), headers=self._headers).json()['submissions']
+        date = datetime.strptime(str(step_submissions[0]['time']), '%Y-%m-%dT%H:%M:%SZ')
+        return date
+
+    def get_date_of_first_wrong_sol_for_student(self, step_id, student_id):
+        """
+        Возвращает дату первого неудачного решения степа студентом
+        :param step_id: id степа
+        :param student_id: id студента
+        :return: datetime object - дата первого неудачного решения студента
+        """
+        step_submissions = requests.get(self.url_api + 'submissions?status=wrong&step=' + str(step_id) + '&user=' + str(student_id), headers=self._headers).json()['submissions']
+        date = datetime.strptime(str(step_submissions[0]['time']), '%Y-%m-%dT%H:%M:%SZ')
+        return date
+
+
 
 
 if __name__ == '__main__':
