@@ -4,12 +4,14 @@ import requests
 from datetime import datetime
 from automation_of_work_for_stepic.utility import singleton
 
+
 def get_current_user(token):
     res = requests.get('https://stepik.org/api/stepics/1', header=f'Authorization: Bearer {token}')
 
+
 @singleton
 class StepicAPI:
-    def __init__(self, file_client=os.path.join('resources','stepic_client.json')):
+    def __init__(self, file_client=os.path.join('resources', 'stepic_client.json')):
         self.url_api = 'https://stepik.org/api/'
         self.url_auth = "https://stepik.org/oauth2/"
         self.client_id, self.client_secret = self.load_client(file_client)
@@ -18,7 +20,7 @@ class StepicAPI:
         self.token_type = None
         self.current_user = None
 
-    def get_url_authorize(self, redirect_uri:str):
+    def get_url_authorize(self, redirect_uri: str):
         """
         Возвращает ссылку для регистрации на степике
         :param redirect_uri:  ссылк на адрес, который получит код авторизации
@@ -26,7 +28,7 @@ class StepicAPI:
         """
         return self.url_auth + f'authorize/?response_type=code&client_id={self.client_id}&redirect_uri={redirect_uri}'
 
-    def init_token(self, code:str, redirect_uri:str):
+    def init_token(self, code: str, redirect_uri: str):
         """
         Инициализация токена по полуенному коду.
         :param code: код авторизации
@@ -83,11 +85,11 @@ class StepicAPI:
         :param path: путь к токену
         :return: Bool
         """
-        if not os.path.exists(os.path.join(path,'token.json')):
+        if not os.path.exists(os.path.join(path, 'token.json')):
             print(f"Error: load token: path {path} not found")
             return False
 
-        with open(os.path.join(path,'token.json'),'r') as f:
+        with open(os.path.join(path, 'token.json'), 'r') as f:
             data = json.load(f)
 
         if data and 'access_token' in data and 'token_type' in data:
@@ -107,7 +109,7 @@ class StepicAPI:
         """
         print(self.response_token)
         if path:
-            with open(os.path.join(path,'token.json'), 'w') as outfile:
+            with open(os.path.join(path, 'token.json'), 'w') as outfile:
                 json.dump(self.response_token, outfile)
 
     @property
@@ -127,7 +129,7 @@ class StepicAPI:
         if res.status_code < 300:
             self.current_user = res.json()['users']
         else:
-            print("Error: download current user: status code",res.status_code)
+            print("Error: download current user: status code", res.status_code)
 
     def get_user_id(self, id=None):
         """
@@ -187,11 +189,11 @@ class StepicAPI:
         :return: список json-ов или json пользотелей
         """
         if type(ids) is str:
-            with open(ids+".json", "w") as f:
+            with open(ids + ".json", "w") as f:
                 json.dump(self.get_user_name(ids), f, indent=4, sort_keys=True, ensure_ascii=False)
         else:
             for id in ids:
-                with open(id+".json", "w") as f:
+                with open(id + ".json", "w") as f:
                     json.dump(self.get_user_name(id), f, indent=4, sort_keys=True, ensure_ascii=False)
 
     def get_course_name(self, id):
@@ -204,7 +206,7 @@ class StepicAPI:
         if type(id) is str:
             try:
                 a = requests.get(self.url_api + 'courses/' + str(id), headers=self._headers)
-                course=a.json()['courses'][0]
+                course = a.json()['courses'][0]
                 return course['title']
             except Exception as e:
                 print(e)
@@ -213,13 +215,13 @@ class StepicAPI:
             courses_titles = []
             for course_id in id:
                 try:
-                    course = requests.get(self.url_api + 'courses/' + str(course_id), headers=self._headers).json()['courses'][0]
+                    course = \
+                    requests.get(self.url_api + 'courses/' + str(course_id), headers=self._headers).json()['courses'][0]
                     courses_titles.append(course['title'])
                 except Exception as e:
                     print(e)
                     courses_titles.append(None)
             return courses_titles
-
 
     def get_course_statistic(self, id):
         """
@@ -229,12 +231,12 @@ class StepicAPI:
         :return: список json-ов или json курса
         """
         try:
-            grades = requests.get(self.url_api + 'course-grades?course=' + str(id), headers=self._headers).json()['course-grades']
+            grades = requests.get(self.url_api + 'course-grades?course=' + str(id), headers=self._headers).json()[
+                'course-grades']
             return grades
         except Exception as e:
             print(e)
             return None
-
 
     def course_info_to_json(self, id):
         """
@@ -244,13 +246,14 @@ class StepicAPI:
         """
         try:
             if type(id) is str:
-                with open(os.path.join("instance", str(id)+"_info.json"), "w") as js:
+                with open(os.path.join("instance", str(id) + "_info.json"), "w") as js:
                     json.dump(self.get_course_info(id), js, indent=4, sort_keys=True, ensure_ascii=False)
             else:
                 for course_id in id:
-                    with open(os.path.join("instance", str(course_id)+"_info.json"), "w") as js:
+                    with open(os.path.join("instance", str(course_id) + "_info.json"), "w") as js:
                         json.dump(self.get_course_info(course_id), js, indent=4, sort_keys=True, ensure_ascii=False)
-        except:
+        except Exception as e:
+            print(f"Error in function course_info_to_json(id={id})\n\t{e}")
             return False
 
     def get_course_info(self, course_id):
@@ -260,17 +263,18 @@ class StepicAPI:
         :return: {}, содержащий название, id и список секций/модулей курса
         """
         try:
-            course = requests.get(self.url_api + 'courses/' + str(course_id), headers=self._headers).json()["courses"][0]
+            course = requests.get(self.url_api + 'courses/' + str(course_id), headers=self._headers).json()["courses"][
+                0]
             info_sections = []
             for section_id in course['sections']:
                 info_sections.append(self.get_section_info(section_id))
             return {
                 "title": course['title'],
-                "id": course['id'],
-                "sections of course": info_sections
+                "id": str(course['id']),
+                "sections": info_sections
             }
-        except:
-            print(f"Error in function get_course_info(course_id={course_id})")
+        except Exception as e:
+            print(f"Error in function get_course_info(course_id={course_id})\n\t{e}")
 
     def get_section_info(self, section_id):
         """
@@ -279,17 +283,18 @@ class StepicAPI:
         :return: {}, содержащий название, id и список уроков секции/модуля
         """
         try:
-            section = requests.get(self.url_api + 'sections/' + str(section_id), headers=self._headers).json()['sections'][0]
+            section = \
+            requests.get(self.url_api + 'sections/' + str(section_id), headers=self._headers).json()['sections'][0]
             lessons = []
             for unit_id in section['units']:
                 lessons.append(self.get_unit_info(unit_id))
             return {
                 "title": section['title'],
-                "id": section['id'],
-                "lessons of section": lessons
+                "id": str(section['id']),
+                "lessons": lessons
             }
-        except:
-            print(f"Error in function get_section_info(section_id={section_id})")
+        except Exception as e:
+            print(f"Error in function get_section_info(section_id={section_id})\n\t{e}")
 
     def get_unit_info(self, unit_id):
         """
@@ -300,8 +305,8 @@ class StepicAPI:
         try:
             unit = requests.get(self.url_api + 'units/' + str(unit_id), headers=self._headers).json()['units'][0]
             return self.get_lesson_info(str(unit['lesson']))
-        except:
-            print(f"Error in function get_unit_info(unit_id={unit_id})")
+        except Exception as e:
+            print(f"Error in function get_unit_info(unit_id={unit_id})\n\t{e}")
 
     def get_lesson_info(self, lesson_id):
         """
@@ -310,15 +315,15 @@ class StepicAPI:
         :return: {}, содержащий информацию об уроке блока
         """
         try:
-            lesson = requests.get(self.url_api + 'lessons/' + str(lesson_id), headers=self._headers).json()['lessons'][0]
+            lesson = requests.get(self.url_api + 'lessons/' + str(lesson_id), headers=self._headers).json()['lessons'][
+                0]
             return {
                 "title": lesson['title'],
-                "id": lesson['id'],
-                "steps of lesson": lesson['steps']
+                "id": str(lesson['id']),
+                "steps": [str(i) for i in lesson['steps']]
             }
-        except:
-            print(f"Error in finction get_lesson_info(lesson_id={lesson_id})")
-
+        except Exception as e:
+            print(f"Error in function get_lesson_info(lesson_id={lesson_id})\n\t{e}")
 
     def get_date_of_first_correct_sol(self, step_id):
         """
@@ -327,7 +332,9 @@ class StepicAPI:
         :return: datetime object - дата первого удачного решения
         """
         try:
-            step_submissions = requests.get(self.url_api + 'submissions?status=correct&step=' + str(step_id) + '&order=asc', headers=self._headers).json()['submissions']
+            step_submissions = \
+            requests.get(self.url_api + 'submissions?status=correct&step=' + str(step_id) + '&order=asc',
+                         headers=self._headers).json()['submissions']
             if len(step_submissions) != 0:
                 date = datetime.strptime(str(step_submissions[0]['time']), '%Y-%m-%dT%H:%M:%SZ')
                 return date
@@ -336,7 +343,6 @@ class StepicAPI:
         except:
             print(f"Error in function get_date_of_first_correct_sol(step_id={step_id})")
 
-
     def get_date_of_first_wrong_sol(self, step_id):
         """
         Принимает на вход id степа и возвращает дату первого неудачного решения в формате datetime
@@ -344,7 +350,9 @@ class StepicAPI:
         :return: datetime object - дата первого неудачного решения
         """
         try:
-            step_submissions = requests.get(self.url_api + 'submissions?status=wrong&step=' + str(step_id) + '&order=asc', headers=self._headers).json()['submissions']
+            step_submissions = \
+            requests.get(self.url_api + 'submissions?status=wrong&step=' + str(step_id) + '&order=asc',
+                         headers=self._headers).json()['submissions']
             if len(step_submissions) != 0:
                 date = datetime.strptime(str(step_submissions[0]['time']), '%Y-%m-%dT%H:%M:%SZ')
                 return date
@@ -352,7 +360,6 @@ class StepicAPI:
                 return None
         except:
             print(f"Error in function get_date_of_first_wrong_sol(step_id={step_id})")
-
 
     def get_date_of_first_correct_sol_for_student(self, step_id, student_id):
         """
@@ -362,14 +369,17 @@ class StepicAPI:
         :return: datetime object - дата первого удачного решения студента
         """
         try:
-            step_submissions = requests.get(self.url_api + 'submissions?status=correct&step=' + str(step_id) + '&user=' + str(student_id) + '&order=asc', headers=self._headers).json()['submissions']
+            step_submissions = requests.get(
+                self.url_api + 'submissions?status=correct&step=' + str(step_id) + '&user=' + str(
+                    student_id) + '&order=asc', headers=self._headers).json()['submissions']
             if len(step_submissions) != 0:
                 date = datetime.strptime(str(step_submissions[0]['time']), '%Y-%m-%dT%H:%M:%SZ')
                 return date
             else:
                 return None
         except:
-            print(f"Error in function get_date_of_first_correct_sol_for_student(step_id={step_id}, student_id={student_id})")
+            print(
+                f"Error in function get_date_of_first_correct_sol_for_student(step_id={step_id}, student_id={student_id})")
 
     def get_date_of_first_wrong_sol_for_student(self, step_id, student_id):
         """
@@ -379,23 +389,20 @@ class StepicAPI:
         :return: datetime object - дата первого неудачного решения студента
         """
         try:
-            step_submissions = requests.get(self.url_api + 'submissions?status=wrong&step=' + str(step_id) + '&user=' + str(student_id) + '&order=asc', headers=self._headers).json()['submissions']
+            step_submissions = requests.get(
+                self.url_api + 'submissions?status=wrong&step=' + str(step_id) + '&user=' + str(
+                    student_id) + '&order=asc', headers=self._headers).json()['submissions']
             if len(step_submissions) != 0:
                 date = datetime.strptime(str(step_submissions[0]['time']), '%Y-%m-%dT%H:%M:%SZ')
                 return date
             else:
                 return None
         except:
-            print(f"Error in function get_date_of_first_wrong_sol_for_student(step_id={step_id}, student_id={student_id})")
-
-
+            print(
+                f"Error in function get_date_of_first_wrong_sol_for_student(step_id={step_id}, student_id={student_id})")
 
 
 if __name__ == '__main__':
     a = StepicAPI()
     a.load_token()
-    a.course_info_to_json(['88888', '37059', 'test'])
-    print(a.get_section_info('sdf'))
-    print(a.get_unit_info(100285))
-    print(a.get_lesson_info(1285002))
-
+    a.course_info_to_json(['37059'])
