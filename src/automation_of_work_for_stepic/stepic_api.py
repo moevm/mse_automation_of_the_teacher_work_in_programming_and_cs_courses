@@ -328,8 +328,11 @@ class StepicAPI:
         """
         try:
             step_submissions = requests.get(self.url_api + 'submissions?status=correct&step=' + str(step_id) + '&order=asc', headers=self._headers).json()['submissions']
-            date = datetime.strptime(str(step_submissions[0]['time']), '%Y-%m-%dT%H:%M:%SZ')
-            return date
+            if len(step_submissions) != 0:
+                date = datetime.strptime(str(step_submissions[0]['time']), '%Y-%m-%dT%H:%M:%SZ')
+                return date
+            else:
+                return None
         except:
             print(f"Error in function get_date_of_first_correct_sol(step_id={step_id})")
 
@@ -342,8 +345,11 @@ class StepicAPI:
         """
         try:
             step_submissions = requests.get(self.url_api + 'submissions?status=wrong&step=' + str(step_id) + '&order=asc', headers=self._headers).json()['submissions']
-            date = datetime.strptime(str(step_submissions[0]['time']), '%Y-%m-%dT%H:%M:%SZ')
-            return date
+            if len(step_submissions) != 0:
+                date = datetime.strptime(str(step_submissions[0]['time']), '%Y-%m-%dT%H:%M:%SZ')
+                return date
+            else:
+                return None
         except:
             print(f"Error in function get_date_of_first_wrong_sol(step_id={step_id})")
 
@@ -357,8 +363,11 @@ class StepicAPI:
         """
         try:
             step_submissions = requests.get(self.url_api + 'submissions?status=correct&step=' + str(step_id) + '&user=' + str(student_id) + '&order=asc', headers=self._headers).json()['submissions']
-            date = datetime.strptime(str(step_submissions[0]['time']), '%Y-%m-%dT%H:%M:%SZ')
-            return date
+            if len(step_submissions) != 0:
+                date = datetime.strptime(str(step_submissions[0]['time']), '%Y-%m-%dT%H:%M:%SZ')
+                return date
+            else:
+                return None
         except:
             print(f"Error in function get_date_of_first_correct_sol_for_student(step_id={step_id}, student_id={student_id})")
 
@@ -371,8 +380,11 @@ class StepicAPI:
         """
         try:
             step_submissions = requests.get(self.url_api + 'submissions?status=wrong&step=' + str(step_id) + '&user=' + str(student_id) + '&order=asc', headers=self._headers).json()['submissions']
-            date = datetime.strptime(str(step_submissions[0]['time']), '%Y-%m-%dT%H:%M:%SZ')
-            return date
+            if len(step_submissions) != 0:
+                date = datetime.strptime(str(step_submissions[0]['time']), '%Y-%m-%dT%H:%M:%SZ')
+                return date
+            else:
+                return None
         except:
             print(f"Error in function get_date_of_first_wrong_sol_for_student(step_id={step_id}, student_id={student_id})")
 
