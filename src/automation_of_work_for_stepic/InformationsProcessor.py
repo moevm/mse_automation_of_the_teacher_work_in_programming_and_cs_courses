@@ -166,15 +166,15 @@ class InformationsProcessor:
                                             {
                                                 'id': step,
                                                 'is_passed': grades[i][stud_id].__getitem__('steps')[step],
-                                                'first_true': 'Дата первого удачного решения: ' + str(date_correct),
-                                                'first_false': 'Дата первого неудачного решения: ' + str(date_wrong),
+                                                'first_true': str(date_correct),
+                                                'first_false': str(date_wrong),
                                             }
                                         )
                                 lesson.update({'steps': steps})
                             if not correct_flag:
                                 sect_date = ' - '
                             sect.update({
-                                'Первое решение модуля': 'Первое решение модуля: ' + str(sect_date),
+                                'Первое решение модуля': str(sect_date),
                                 'Прогресс модуля': 'Прогресс модуля' + stud_id
                             })
                         course.update({'Прогресс': grades[i][stud_id]['progress']})
