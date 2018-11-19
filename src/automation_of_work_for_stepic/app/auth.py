@@ -30,22 +30,11 @@ def login():
 
         if app.config['ENV'] == 'development':
             stepic.save_token(app.instance_path)
-        user_id = stepic.get_user_id()
-        #сохраняем пользователя в базу
-        #db = get_db()
-        #user = db.execute(
-        #    'SELECT * FROM user WHERE username = ?', (user_id,)
-        #).fetchone()
-
-        #if user is None:
-        #    db.execute(
-        #        'INSERT INTO user (username, password) VALUES (?, ?)',
-        #        (user_id, ' '))
-        #    db.commit()
 
         #очищаем ссесию
         session.clear()
-        session['user_id'] = user_id
+        session['user_id'] = stepic.current_user_id()
+        session['user_name'] = stepic.get_user_name()
         return redirect(url_for('index'))
     else:
         return render_template('error/401.html')
@@ -58,12 +47,13 @@ def load_logged_in_user():
     Загрузка информации перел открытием страницы
     :return:
     """
-    user_id= session.get('user_id')
+    user_name= session.get('user_name')
+    print(user_name)
 
-    if user_id is None:
+    if user_name is None:
         g.user = None
     else:
-        g.user = stepic.get_user_name()
+        g.user = user_name
 
     if app.config['ENV'] == 'development':
         g.dev = True
@@ -112,10 +102,13 @@ def login_dev():
     """
     if stepic.load_token(app.instance_path):
 
-        user_id = stepic.get_user_id()
         # очищаем ссесию
         session.clear()
-        session['user_id'] = user_id
+        session['user_id'] = stepic.current_user_id()
+        session['user_name']= stepic.get_user_name()
+
+        print(stepic.current_user_id())
+        print(stepic.get_user_name())
         return redirect(url_for('index'))
     else:
         #переходим на авторизаци степика

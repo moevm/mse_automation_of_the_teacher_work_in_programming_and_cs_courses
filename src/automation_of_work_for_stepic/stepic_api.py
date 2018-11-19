@@ -4,25 +4,45 @@ import requests
 
 from automation_of_work_for_stepic.utility import singleton
 
-def get_current_user(token):
-    res = requests.get('https://stepik.org/api/stepics/1', header=f'Authorization: Bearer {token}')
 
 @singleton
 class StepicAPI:
+    """
+    Класс для доступа к stepic api
+    """
     def __init__(self, file_client=os.path.join('resources','stepic_client.json')):
         self.url_api = 'https://stepik.org/api/'
         self.url_auth = "https://stepik.org/oauth2/"
         self.client_id, self.client_secret = self.load_client(file_client)
+
         self.response_token = None
         self.token = None
         self.token_type = None
-        self.current_user = None
+
+    def load_client(self, path: str):
+        """
+        Получение данных клиента для взаимодействия с апи
+        :param file: путь к файлу
+        :return: (client_id, secret_key)
+        """
+        if not os.path.exists(path):
+            print(f"Error: load client: path {path} not found")
+            return None, None
+
+        with open(path) as f:
+            data = json.load(f)
+
+        if data:
+            return data.get('client_id'), data.get('client_secret')
+
+        print(f"Error: client id: file {path} has wrong structure")
+        return None, None
 
     def get_url_authorize(self, redirect_uri:str):
         """
         Возвращает ссылку для регистрации на степике
-        :param redirect_uri:  ссылк на адрес, который получит код авторизации
-        :return:
+        :param redirect_uri:  ссылка на адрес, который получит код авторизации
+        :return: сформированный url
         """
         return self.url_auth + f'authorize/?response_type=code&client_id={self.client_id}&redirect_uri={redirect_uri}'
 
@@ -50,7 +70,7 @@ class StepicAPI:
 
     def clear_token(self):
         """
-        Выход пользователя
+        Выход пользователя, очистка токена
         :return:
         """
         self.response_token = None
@@ -58,36 +78,17 @@ class StepicAPI:
         self.token_type = None
         self.current_user = None
 
-    def load_client(self, path: str):
-        """
-        Получение данных клиента для взаимодействия с апи
-        :param file: путь к файлу
-        :return: (client_id, secret_key)
-        """
-        if not os.path.exists(path):
-            print(f"Error: load client: path {path} not found")
-            return None, None
-
-        with open(path) as f:
-            data = json.load(f)
-
-        if data:
-            return data.get('client_id'), data.get('client_secret')
-
-        print(f"Error: client id: file {path} has wrong structure")
-        return None, None
-
     def load_token(self, path: str = os.path.join('instance')):
         """
         Загружает токен из файла. Если загрузка удалась, то возращает True, инача - False
         :param path: путь к токену
         :return: Bool
         """
-        if not os.path.exists(os.path.join(path,'token.json')):
+        if not os.path.exists(os.path.join(path, 'token.json')):
             print(f"Error: load token: path {path} not found")
             return False
 
-        with open(os.path.join(path,'token.json'),'r') as f:
+        with open(os.path.join(path, 'token.json'), 'r') as f:
             data = json.load(f)
 
         if data and 'access_token' in data and 'token_type' in data:
@@ -101,51 +102,48 @@ class StepicAPI:
 
     def save_token(self, path: str = os.path.join('instance')):
         """
-        Созраняет токен в файл
-        :param path:
+        Созраняет токен в файл  с именем token.json
+        :param path: путь куда токен созранитьмя
         :return:
         """
-        print(self.response_token)
         if path:
-            with open(os.path.join(path,'token.json'), 'w') as outfile:
+            with open(os.path.join(path, 'token.json'), 'w') as outfile:
                 json.dump(self.response_token, outfile)
 
     @property
     def _headers(self):
+        """
+        Формирует заголовок для запроса к апи
+        :return: данные с токеном
+        """
         return {'Authorization': self.token_type + ' ' + self.token}
 
-    def download_current_user(self):
+    def current_user(self):
         """
-        Загрузка информации о текущем пользователе
+        Возвращает информацию о текущем толькователе
         :return:
         """
-        if not self.token:
-            print("Error: download current user: token don't exist")
-            return
 
         res = requests.get(self.url_api + 'stepics/1', headers=self._headers)
         if res.status_code < 300:
-            self.current_user = res.json()['users']
+            return res.json()['users'][0]
         else:
             print("Error: download current user: status code",res.status_code)
+            return None
 
-    def get_user_id(self, id=None):
+    def current_user_id(self):
         """
         Получение информации о пользователе.
         Если id не передан, то возвращается информация о текущем пользователе
         :param id:
         :return:
         """
-        if not id:
-            if not self.current_user:
-                self.download_current_user()
+        res=self.current_user()
 
-                if not self.current_user:
-                    return None
-
-            return self.current_user[0]['id']
-        else:
-            pass
+        if not res:
+            return None
+        print(res)
+        return res['id']
 
     def get_user_name(self, id=None):
         """
@@ -157,10 +155,10 @@ class StepicAPI:
         if not id:
 
             if not self.current_user:
-                self.download_current_user()
+                self.current_user()
                 if not self.current_user:
                     return
-            return self.current_user[0]['full_name']
+            return self.current_user['full_name']
         else:
             if type(id) is str:
                 print("1")
@@ -277,7 +275,7 @@ class StepicAPI:
         """
         try:
             if type(id) is str:
-                with open(os.path.join("instance", str(id)+"_info.json"), "w") as js:
+                with open(os.path.join("instance", str(id) + "_info.json"), "w") as js:
                     json.dump(self.get_course_info(id), js, indent=4, sort_keys=True, ensure_ascii=False)
             else:
                 for course_id in id:
