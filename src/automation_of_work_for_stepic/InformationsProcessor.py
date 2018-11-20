@@ -4,7 +4,7 @@ from automation_of_work_for_stepic import stepic_api
 import copy
 import json
 import os
-from datetime import datetime
+from datetime import datetime, date
 
 
 class InformationsProcessor:
@@ -151,8 +151,9 @@ class InformationsProcessor:
                     course = copy.deepcopy(courses_structure[i])
                     if grades[i][stud_id]['steps']:
                         for sect in course['sections']:
-                            sect_date = datetime.date(datetime.now())
-                            correct_flag = False
+                            sect_date = date(1970, 1, 1)
+                            step_counter = 0
+                            correct_step_counter = 0
                             for lesson in sect['lessons']:
                                 steps = []
                                 for step in lesson['steps']:
@@ -160,12 +161,13 @@ class InformationsProcessor:
                                     stud_grades = grade[stud_id]
                                     passed_steps = stud_grades.__getitem__('steps')
                                     if step in passed_steps.keys():
+                                        step_counter += 1
                                         date_correct = stepic_api.StepicAPI().get_date_of_first_correct_sol_for_student(step, stud_id)
                                         if date_correct:
+                                            correct_step_counter += 1
                                             date_correct = datetime.date(date_correct)
-                                            if date_correct < sect_date:
+                                            if date_correct > sect_date:
                                                 sect_date = date_correct
-                                            correct_flag = True
                                         else:
                                             date_correct = '-'
                                         date_wrong = stepic_api.StepicAPI().get_date_of_first_wrong_sol_for_student(step, stud_id)
@@ -182,16 +184,17 @@ class InformationsProcessor:
                                             }
                                         )
                                 lesson.update({'steps': steps})
-                            if not correct_flag:
-                                sect_date = ' - '
+                            if correct_step_counter != step_counter:
+                                sect_date = '-'
                             sect.update({
-                                'Первое решение модуля': str(sect_date),
-                                'Прогресс модуля': 'Прогресс модуля ' + stud_id
+                                'date': str(sect_date),
+                                'progress': str(100*correct_step_counter/step_counter) + '%',
+                                'is_passed': correct_step_counter == step_counter
                             })
-                        course.update({'Прогресс': grades[i][stud_id]['progress']})
+                        course.update({'progress': grades[i][stud_id]['progress']})
                     else:
                         course.update({
-                            'Прогресс': 'Нет',
+                            'progress': 'Нет',
                             'sections': []
                             })
                     stud_courses.append(course)
