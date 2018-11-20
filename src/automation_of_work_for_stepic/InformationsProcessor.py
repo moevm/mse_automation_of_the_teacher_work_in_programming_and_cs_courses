@@ -4,7 +4,7 @@ from automation_of_work_for_stepic import stepic_api
 import copy
 import json
 import os
-from datetime import datetime
+from datetime import datetime, date
 
 
 class InformationsProcessor:
@@ -117,14 +117,25 @@ class InformationsProcessor:
 
     @staticmethod
     def get_course_info_from_json(course_id):
+        """
+        Чтение json-а с информацией о структуре курса
+        :param course_id: str - id курса
+        :return: {} - структура курса
+        """
         if not os.path.exists(os.path.join('instance', course_id + '_info.json')):
             print(f"Error: load course_info: path " + "instance/" + course_id + "_info.json"+ " not found")
             return None
-        with open(os.path.join('instance', course_id + '_info.json'), 'r') as f:
+        with open(os.path.join('instance', course_id + '_info.json'), 'r', encoding='utf-8') as f:
             info = json.load(f)
         return info
 
     def info_about_students(self, studs_id: list, courses_id: list):
+        """
+        Возвращает информацию о прохождении студентами курсов
+        :param studs_id: [str] - список id студентов
+        :param courses_id: [str] - список id курсов
+        :return: [{}] - список информаций по каждому студенту
+        """
         try:
             courses_structure = [self.get_course_info_from_json(courses_id[i]) for i in range(courses_id.__len__())]
             studs_info = []
@@ -140,8 +151,9 @@ class InformationsProcessor:
                     course = copy.deepcopy(courses_structure[i])
                     if grades[i][stud_id]['steps']:
                         for sect in course['sections']:
-                            sect_date = datetime.date(datetime.now())
-                            correct_flag = False
+                            sect_date = date(1970, 1, 1)
+                            step_counter = 0
+                            correct_step_counter = 0
                             for lesson in sect['lessons']:
                                 steps = []
                                 for step in lesson['steps']:
@@ -149,12 +161,13 @@ class InformationsProcessor:
                                     stud_grades = grade[stud_id]
                                     passed_steps = stud_grades.__getitem__('steps')
                                     if step in passed_steps.keys():
+                                        step_counter += 1
                                         date_correct = stepic_api.StepicAPI().get_date_of_first_correct_sol_for_student(step, stud_id)
                                         if date_correct:
+                                            correct_step_counter += 1
                                             date_correct = datetime.date(date_correct)
-                                            if date_correct < sect_date:
+                                            if date_correct > sect_date:
                                                 sect_date = date_correct
-                                            correct_flag = True
                                         else:
                                             date_correct = '-'
                                         date_wrong = stepic_api.StepicAPI().get_date_of_first_wrong_sol_for_student(step, stud_id)
@@ -166,21 +179,22 @@ class InformationsProcessor:
                                             {
                                                 'id': step,
                                                 'is_passed': grades[i][stud_id].__getitem__('steps')[step],
-                                                'first_true': 'Дата первого удачного решения: ' + str(date_correct),
-                                                'first_false': 'Дата первого неудачного решения: ' + str(date_wrong),
+                                                'first_true': str(date_correct),
+                                                'first_false': str(date_wrong),
                                             }
                                         )
                                 lesson.update({'steps': steps})
-                            if not correct_flag:
-                                sect_date = ' - '
+                            if correct_step_counter != step_counter:
+                                sect_date = '-'
                             sect.update({
-                                'Первое решение модуля': 'Первое решение модуля: ' + str(sect_date),
-                                'Прогресс модуля': 'Прогресс модуля' + stud_id
+                                'date': str(sect_date),
+                                'progress': str(100*correct_step_counter/step_counter) + '%',
+                                'is_passed': correct_step_counter == step_counter
                             })
-                        course.update({'Прогресс': grades[i][stud_id]['progress']})
+                        course.update({'progress': grades[i][stud_id]['progress']})
                     else:
                         course.update({
-                            'Прогресс': 'Нет',
+                            'progress': 'Нет',
                             'sections': []
                             })
                     stud_courses.append(course)
@@ -195,6 +209,10 @@ class InformationsProcessor:
             print(f"Error in function info_about_students (studs_id={studs_id}, courses_id={courses_id})\n\t{e}")
 
     def build_summary_table(self):
+        """
+        Построение сводных данных по всем курсам и студентам
+        :return: [{}] - список информаций о прогрессе по всем курсам каждого студента
+        """
         try:
             table = []
             grades = self.course_grades()
