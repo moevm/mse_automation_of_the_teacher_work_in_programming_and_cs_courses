@@ -117,14 +117,25 @@ class InformationsProcessor:
 
     @staticmethod
     def get_course_info_from_json(course_id):
+        """
+        Чтение json-а с информацией о структуре курса
+        :param course_id: str - id курса
+        :return: {} - структура курса
+        """
         if not os.path.exists(os.path.join('instance', course_id + '_info.json')):
             print(f"Error: load course_info: path " + "instance/" + course_id + "_info.json"+ " not found")
             return None
-        with open(os.path.join('instance', course_id + '_info.json'), 'r') as f:
+        with open(os.path.join('instance', course_id + '_info.json'), 'r', encoding='utf-8') as f:
             info = json.load(f)
         return info
 
     def info_about_students(self, studs_id: list, courses_id: list):
+        """
+        Возвращает информацию о прохождении студентами курсов
+        :param studs_id: [str] - список id студентов
+        :param courses_id: [str] - список id курсов
+        :return: [{}] - список информаций по каждому студенту
+        """
         try:
             courses_structure = [self.get_course_info_from_json(courses_id[i]) for i in range(courses_id.__len__())]
             studs_info = []
@@ -175,7 +186,7 @@ class InformationsProcessor:
                                 sect_date = ' - '
                             sect.update({
                                 'Первое решение модуля': str(sect_date),
-                                'Прогресс модуля': 'Прогресс модуля' + stud_id
+                                'Прогресс модуля': 'Прогресс модуля ' + stud_id
                             })
                         course.update({'Прогресс': grades[i][stud_id]['progress']})
                     else:
@@ -195,6 +206,10 @@ class InformationsProcessor:
             print(f"Error in function info_about_students (studs_id={studs_id}, courses_id={courses_id})\n\t{e}")
 
     def build_summary_table(self):
+        """
+        Построение сводных данных по всем курсам и студентам
+        :return: [{}] - список информаций о прогрессе по всем курсам каждого студента
+        """
         try:
             table = []
             grades = self.course_grades()

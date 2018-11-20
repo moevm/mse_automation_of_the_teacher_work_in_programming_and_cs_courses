@@ -246,11 +246,11 @@ class StepicAPI:
         """
         try:
             if type(id) is str:
-                with open(os.path.join("instance", str(id) + "_info.json"), "w") as js:
+                with open(os.path.join("instance", str(id) + "_info.json"), "w", encoding='utf-8') as js:
                     json.dump(self.get_course_info(id), js, indent=4, sort_keys=True, ensure_ascii=False)
             else:
                 for course_id in id:
-                    with open(os.path.join("instance", str(course_id) + "_info.json"), "w") as js:
+                    with open(os.path.join("instance", str(course_id) + "_info.json"), "w", encoding='utf-8') as js:
                         json.dump(self.get_course_info(course_id), js, indent=4, sort_keys=True, ensure_ascii=False)
         except Exception as e:
             print(f"Error in function course_info_to_json(id={id})\n\t{e}")
