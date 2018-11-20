@@ -85,7 +85,6 @@ if __name__ == '__main__':
     with open('./instance/full_info.json', encoding='utf-8') as data:
         d = json.load(data)
     course_id = '37059'
-    date_step = 2
     a=Painter(course_id, d)
     a.get_start_info()
 
