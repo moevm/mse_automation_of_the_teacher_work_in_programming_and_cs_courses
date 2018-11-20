@@ -86,4 +86,5 @@ if __name__ == '__main__':
     date_step = 2
     a=Painter(course_id, d)
     a.get_start_info()
+    
 
