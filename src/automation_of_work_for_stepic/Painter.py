@@ -3,6 +3,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from datetime import datetime as dt
 from datetime import timedelta
+import re
 
 
 class Painter:
@@ -15,14 +16,15 @@ class Painter:
         for students in self.d:
             for course in students['courses']:
                 if self.course_id == course['id']:
-                    count_steps = 0
                     title = course['title']
+                    count_steps = 0
                     for section in course['sections']:
                         for lesson in section['lessons']:
                             for step in lesson['steps']:
                                 count_steps += 1
                                 if step['first_true']:
-                                    a.setdefault(course['title'], []).append(step['first_true'])
+                                    if re.fullmatch(r'\d{4}-\d{2}-(\d{2})', step['first_true']):
+                                        a.setdefault(course['title'], []).append(step['first_true'])
 
         earliest = dt.now().date()
         for key, value in a.items():
@@ -35,7 +37,6 @@ class Painter:
 
     def progress_for_date(self, count_steps, date):
         passed_steps = 0
-
         for students in self.d:
             for course in students['courses']:
                 if self.course_id == course['id']:
@@ -43,10 +44,11 @@ class Painter:
                         for lesson in section['lessons']:
                             for step in lesson['steps']:
                                 if step['first_true']:
-                                    date1 = step['first_true']
-                                    date1 = dt.strptime(date1, "%Y-%m-%d").date()
-                                    if date1 <= date:
-                                        passed_steps += 1
+                                    if re.fullmatch(r'\d{4}-\d{2}-(\d{2})', step['first_true']):
+                                        date1 = step['first_true']
+                                        date1 = dt.strptime(date1, "%Y-%m-%d").date()
+                                        if date1 <= date:
+                                            passed_steps += 1
         progress = passed_steps*100/(count_steps*len(d))
         return progress
 
@@ -80,11 +82,10 @@ class Painter:
 
 
 if __name__ == '__main__':
-    with open('./instance/full_info.json') as data:
+    with open('./instance/full_info.json', encoding='utf-8') as data:
         d = json.load(data)
-    course_id = '37011'
+    course_id = '37059'
     date_step = 2
     a=Painter(course_id, d)
     a.get_start_info()
-    
 
