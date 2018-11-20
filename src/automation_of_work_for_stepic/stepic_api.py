@@ -173,14 +173,12 @@ class StepicAPI:
         """
         if not id:
 
+            user=self.current_user()
             if not self.current_user:
-                self.current_user()
-                if not self.current_user:
-                    return
-            return self.current_user['full_name']
+                return
+            return user['full_name']
         else:
             if type(id) is str:
-                print("1")
                 try:
                     user = requests.get(self.url_api + 'users/' + str(id)).json()['users'][0]
                     return user['full_name']

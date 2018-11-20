@@ -10,7 +10,7 @@
 <tr>
     <th>Name</th>
     {%- for c in course %}
-    <th><a href="{{ url_for('page.course_page',id=c['id']) }}">{{c['name']}}</a></th>
+    <th><a href="{{ url_for('page.course_page',id=c['id']) }}">{{c['title']}}</a></th>
     {%- endfor %}
 </tr>
 </thead>
@@ -19,7 +19,7 @@
 <tr>
     <td><a href="{{ url_for('page.student_page',id=n['id']) }}"> {{n['name_google']}} </a></td>
     {% for p in progress %}
-    <td>{{p[n['id']]}}</td>
+    <td>{{p[n['id']]['progress']}}</td>
     {%- endfor %}
 </tr>
 {% endfor %}

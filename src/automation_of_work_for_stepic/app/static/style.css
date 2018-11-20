@@ -81,3 +81,18 @@ table.blueTable tfoot .links a{
   padding: 2px 8px;
   border-radius: 5px;
 }
+
+.more {
+display: none;
+}
+
+a.showLink, a.hideLink {
+text-decoration: none;
+color: blue;
+padding-left: 8px;
+}
+
+
+a.showLink:hover, a.hideLink:hover {
+color: #36f;
+}

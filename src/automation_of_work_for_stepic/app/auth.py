@@ -106,9 +106,6 @@ def login_dev():
         session.clear()
         session['user_id'] = stepic.current_user_id()
         session['user_name']= stepic.get_user_name()
-
-        print(stepic.current_user_id())
-        print(stepic.get_user_name())
         return redirect(url_for('index'))
     else:
         #переходим на авторизаци степика

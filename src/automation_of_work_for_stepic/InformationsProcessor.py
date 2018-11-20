@@ -16,7 +16,7 @@ class InformationsProcessor:
 
     def download_users(self):
         table_config = self.config.get_google_table_config()
-        'Открытие таблицы с помощью gspread согласно конфигурационным данным'
+        #'Открытие таблицы с помощью gspread согласно конфигурационным данным'
         a = GoogleTable()
         a.set_table(table_config['URL'], table_config['Sheet'])
 
@@ -217,5 +217,6 @@ class InformationsProcessor:
 
 if __name__=="__main__":
     api = stepic_api.StepicAPI()
+    api.load_token()
     a = InformationsProcessor(api)
     print(a.download_course())
