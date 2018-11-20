@@ -5,26 +5,44 @@ from datetime import datetime
 from automation_of_work_for_stepic.utility import singleton
 
 
-def get_current_user(token):
-    res = requests.get('https://stepik.org/api/stepics/1', header=f'Authorization: Bearer {token}')
-
-
 @singleton
 class StepicAPI:
-    def __init__(self, file_client=os.path.join('resources', 'stepic_client.json')):
+    """
+    Класс для доступа к stepic api
+    """
+    def __init__(self, file_client=os.path.join('resources','stepic_client.json')):
         self.url_api = 'https://stepik.org/api/'
         self.url_auth = "https://stepik.org/oauth2/"
         self.client_id, self.client_secret = self.load_client(file_client)
+
         self.response_token = None
         self.token = None
         self.token_type = None
-        self.current_user = None
+
+    def load_client(self, path: str):
+        """
+        Получение данных клиента для взаимодействия с апи
+        :param file: путь к файлу
+        :return: (client_id, secret_key)
+        """
+        if not os.path.exists(path):
+            print(f"Error: load client: path {path} not found")
+            return None, None
+
+        with open(path) as f:
+            data = json.load(f)
+
+        if data:
+            return data.get('client_id'), data.get('client_secret')
+
+        print(f"Error: client id: file {path} has wrong structure")
+        return None, None
 
     def get_url_authorize(self, redirect_uri: str):
         """
         Возвращает ссылку для регистрации на степике
-        :param redirect_uri:  ссылк на адрес, который получит код авторизации
-        :return:
+        :param redirect_uri:  ссылка на адрес, который получит код авторизации
+        :return: сформированный url
         """
         return self.url_auth + f'authorize/?response_type=code&client_id={self.client_id}&redirect_uri={redirect_uri}'
 
@@ -52,7 +70,7 @@ class StepicAPI:
 
     def clear_token(self):
         """
-        Выход пользователя
+        Выход пользователя, очистка токена
         :return:
         """
         self.response_token = None
@@ -103,8 +121,8 @@ class StepicAPI:
 
     def save_token(self, path: str = os.path.join('instance')):
         """
-        Созраняет токен в файл
-        :param path:
+        Созраняет токен в файл  с именем token.json
+        :param path: путь куда токен созранитьмя
         :return:
         """
         print(self.response_token)
@@ -114,40 +132,37 @@ class StepicAPI:
 
     @property
     def _headers(self):
+        """
+        Формирует заголовок для запроса к апи
+        :return: данные с токеном
+        """
         return {'Authorization': self.token_type + ' ' + self.token}
 
-    def download_current_user(self):
+    def current_user(self):
         """
-        Загрузка информации о текущем пользователе
+        Возвращает информацию о текущем толькователе
         :return:
         """
-        if not self.token:
-            print("Error: download current user: token don't exist")
-            return
 
         res = requests.get(self.url_api + 'stepics/1', headers=self._headers)
         if res.status_code < 300:
-            self.current_user = res.json()['users']
+            return res.json()['users'][0]
         else:
-            print("Error: download current user: status code", res.status_code)
+            print("Error: download current user: status code",res.status_code)
 
-    def get_user_id(self, id=None):
+    def current_user_id(self):
         """
         Получение информации о пользователе.
         Если id не передан, то возвращается информация о текущем пользователе
         :param id:
         :return:
         """
-        if not id:
-            if not self.current_user:
-                self.download_current_user()
+        res=self.current_user()
 
-                if not self.current_user:
-                    return None
-
-            return self.current_user[0]['id']
-        else:
-            pass
+        if not res:
+            return None
+        print(res)
+        return res['id']
 
     def get_user_name(self, id=None):
         """
@@ -159,10 +174,10 @@ class StepicAPI:
         if not id:
 
             if not self.current_user:
-                self.download_current_user()
+                self.current_user()
                 if not self.current_user:
                     return
-            return self.current_user[0]['full_name']
+            return self.current_user['full_name']
         else:
             if type(id) is str:
                 print("1")
@@ -223,6 +238,7 @@ class StepicAPI:
                     courses_titles.append(None)
             return courses_titles
 
+
     def get_course_statistic(self, id):
         """
         возвращающает json или список json-ов со статистикой о курсе
@@ -258,7 +274,7 @@ class StepicAPI:
 
     def get_course_info(self, course_id):
         """
-        Получает информацию о курсе
+        Получает информацию о курсе (структура курса)
         :param course_id: str - индекс курса
         :return: {}, содержащий название, id и список секций/модулей курса
         """
@@ -405,4 +421,8 @@ class StepicAPI:
 if __name__ == '__main__':
     a = StepicAPI()
     a.load_token()
-    a.course_info_to_json(['37059'])
+    a.course_info_to_json(['88888', '37059', 'test'])
+    print(a.get_section_info('sdf'))
+    print(a.get_unit_info(100285))
+    print(a.get_lesson_info(1285002))
+

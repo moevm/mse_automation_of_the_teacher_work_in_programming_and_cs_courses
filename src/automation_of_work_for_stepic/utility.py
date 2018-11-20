@@ -1,6 +1,11 @@
 import functools
 
 def singleton(cls):
+    """
+    Паттерн реализующий паттерн одиночка
+    :param cls:
+    :return:
+    """
     instance=None
 
     @functools.wraps(cls)
