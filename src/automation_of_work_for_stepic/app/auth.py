@@ -48,7 +48,6 @@ def load_logged_in_user():
     :return:
     """
     user_name= session.get('user_name')
-    print(user_name)
 
     if user_name is None:
         g.user = None

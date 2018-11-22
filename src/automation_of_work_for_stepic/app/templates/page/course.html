@@ -5,5 +5,71 @@
 {% endblock %}
 
 {% block content %}
-Курсы
+<script language="javascript" type="text/javascript">
+            function showHide(shID) {
+               if (document.getElementById(shID)) {
+                  if (document.getElementById(shID+'-show').style.display != 'none') {
+                     document.getElementById(shID+'-show').style.display = 'none';
+                     document.getElementById(shID).style.display = 'block';
+                  }
+                  else {
+                     document.getElementById(shID+'-show').style.display = 'inline';
+                     document.getElementById(shID).style.display = 'none';
+                  }
+               }
+            }
+</script>
+
+ID: {{info['id']}} <br>
+Название : {{info['title']}} <br>
+
+<a href="1" class="hideLink" onclick="showHide({{info['id']}});return false;">Стурктура курса</a><a id="{{info['id']}}-show"></a>
+<ul id={{info['id']}} class="more">
+    {%- for section in info['sections'] %}
+    <li>
+        <a href="1" class="hideLink" onclick="showHide({{section['id']}});return false;">{{section['title']}}</a><a id="{{section['id']}}-show"></a>
+        <ul id={{section['id']}} class="more">
+            {%- for lesson in section['lessons'] %}
+            <li>
+                 <a href="1" class="hideLink" onclick="showHide({{lesson['id']}});return false;">{{lesson['title']}}</a><a id="{{lesson['id']}}-show"></a>
+                <ul id={{lesson['id']}} class="more">
+                    {%- for step in lesson['steps'] %}
+                    <li>{{step}}</li>
+                    {%- endfor %}
+                </ul>
+                <br>
+            </li>
+            {%- endfor %}
+        </ul>
+        <br>
+    </li>
+    {%- endfor %}
+</ul>
+<br>
+<br>
+Прохождение шагов студентами
+<table class="blueTable">
+<thead>
+<tr>
+    <th>Name</th>
+    {%- for step in steps %}
+    <th>{{step}}</a></th>
+    {%- endfor %}
+</tr>
+</thead>
+<tbody>
+{% for n in names %}
+<tr>
+    <td><a href="{{ url_for('page.student_page',id=n['id']) }}"> {{n['name_google']}} </a></td>
+        {% for step in steps %}
+        {% if progress[n['id']]['steps'][step] %}
+        <td>1</td>
+        {% else %}
+        <td>0</td>
+        {% endif %}
+    {%- endfor %}
+</tr>
+{% endfor %}
+</tbody>
+</table>
 {% endblock %}

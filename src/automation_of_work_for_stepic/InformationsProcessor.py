@@ -137,7 +137,7 @@ class InformationsProcessor:
         :return: [{}] - список информаций по каждому студенту
         """
         try:
-            courses_structure = [self.get_course_info_from_json(courses_id[i]) for i in range(courses_id.__len__())]
+            courses_structure = [self.stepic_api.get_course_info(courses_id[i]) for i in range(courses_id.__len__())]
             studs_info = []
             for stud_id in studs_id:
                 stud = None
@@ -210,6 +210,7 @@ class InformationsProcessor:
             return studs_info
         except Exception as e:
             print(f"Error in function info_about_students (studs_id={studs_id}, courses_id={courses_id})\n\t{e}")
+            raise e
 
     def build_summary_table(self):
         """
@@ -237,7 +238,14 @@ class InformationsProcessor:
 
 
 if __name__=="__main__":
-    api = stepic_api.StepicAPI()
-    api.load_token()
-    a = InformationsProcessor(api)
-    print(a.download_course())
+    aa = stepic_api.StepicAPI()
+    aa.load_token()
+    a = InformationsProcessor(aa)
+    a.create_jsons_course()
+    a.create_jsons_user()
+    courses = [i['id'] for i in a.course]
+    students = [i['id'] for i in a.students]
+    #aa.course_info_to_json(courses)
+    #table = a.build_summary_table()
+    full_info = a.info_about_students(students, courses)
+    print(full_info)
