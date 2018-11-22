@@ -168,26 +168,29 @@ class InformationsProcessor:
                                             date_correct = datetime.date(date_correct)
                                             if date_correct > sect_date:
                                                 sect_date = date_correct
+                                            date_correct = date_correct.strftime("%d.%m.%Y")
                                         else:
                                             date_correct = '-'
                                         date_wrong = stepic_api.StepicAPI().get_date_of_first_wrong_sol_for_student(step, stud_id)
                                         if date_wrong:
-                                            date_wrong = datetime.date(date_wrong)
+                                            date_wrong = datetime.date(date_wrong).strftime("%d.%m.%Y")
                                         else:
                                             date_wrong = '-'
                                         steps.append(
                                             {
                                                 'id': step,
                                                 'is_passed': grades[i][stud_id].__getitem__('steps')[step],
-                                                'first_true': str(date_correct),
-                                                'first_false': str(date_wrong),
+                                                'first_true': date_correct,
+                                                'first_false': date_wrong,
                                             }
                                         )
                                 lesson.update({'steps': steps})
                             if correct_step_counter != step_counter:
                                 sect_date = '-'
+                            else:
+                                sect_date = sect_date.strftime("%d.%m.%Y")
                             sect.update({
-                                'date': str(sect_date),
+                                'date': sect_date,
                                 'progress': str(100*correct_step_counter/step_counter) + '%',
                                 'is_passed': correct_step_counter == step_counter
                             })
