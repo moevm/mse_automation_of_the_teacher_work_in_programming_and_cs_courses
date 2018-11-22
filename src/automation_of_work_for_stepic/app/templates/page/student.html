@@ -5,5 +5,70 @@
 {% endblock %}
 
 {% block content %}
-Студенты
+<script language="javascript" type="text/javascript">
+            function showHide(shID) {
+               if (document.getElementById(shID)) {
+                  if (document.getElementById(shID+'-show').style.display != 'none') {
+                     document.getElementById(shID+'-show').style.display = 'none';
+                     document.getElementById(shID).style.display = 'block';
+                  }
+                  else {
+                     document.getElementById(shID+'-show').style.display = 'inline';
+                     document.getElementById(shID).style.display = 'none';
+                  }
+               }
+            }
+</script>
+
+ID  студента: {{info['id']}} <br>
+Имя студента с гугл таблице : {{info['name_google']}} <br>
+Имя студента в степике: {{info['name_stepic']}} <br>
+Курсы <br>
+
+<ul>
+    {%- for course in info['courses'] %}
+	<li>
+        <a href="1" class="hideLink" onclick="showHide({{course['id']}});return false;">{{course['title']}}</a><a id="{{course['id']}}-show"></a>
+		<ul id={{course['id']}} class="more">
+            Прогресс: {{course['progress']}} <br>
+            <br>
+            {%- for section in course['sections'] %}
+			<li>
+                <a href="1" class="hideLink" onclick="showHide({{section['id']}});return false;">{{section['title']}}</a><a id="{{section['id']}}-show"></a>
+                <ul id={{section['id']}} class="more">
+                    Прогресс курса: {{section['progress']}}
+                    <br>
+                    {% if section['is_passed'] %}
+                        Дата: {{section['date']}}<br>
+                    {% endif %}
+                    <br>
+                    {%- for lesson in section['lessons'] %}
+			        <li>
+                         <a href="1" class="hideLink" onclick="showHide({{lesson['id']}});return false;">{{lesson['title']}}</a><a id="{{lesson['id']}}-show"></a>
+                        <ul id={{lesson['id']}} class="more">
+                            {%- for step in lesson['steps'] %}
+			                <li>{{step['id']}}<br>
+                                Решен: {{step['is_passed']}} <br>
+                                {% if step['is_passed'] %}
+                                Первое правильное решение: {{step['first_true']}}<br>
+                                {% endif %}
+                                Первое неверное решение: {{step['first_false']}}<br>
+                                <br>
+                            </li>
+                            {%- endfor %}
+		                </ul>
+                        <br>
+                    </li>
+                    {%- endfor %}
+		        </ul>
+                <br>
+            </li>
+            {%- endfor %}
+		</ul>
+        <br>
+	</li>
+    {%- endfor %}
+</ul>
+
+
 {% endblock %}
