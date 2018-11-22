@@ -136,7 +136,10 @@ class StepicAPI:
         Формирует заголовок для запроса к апи
         :return: данные с токеном
         """
-        return {'Authorization': self.token_type + ' ' + self.token}
+        if self.token:
+
+            return {'Authorization': self.token_type + ' ' + self.token}
+        return None
 
     def current_user(self):
         """
@@ -161,7 +164,6 @@ class StepicAPI:
 
         if not res:
             return None
-        print(res)
         return res['id']
 
     def get_user_name(self, id=None):
