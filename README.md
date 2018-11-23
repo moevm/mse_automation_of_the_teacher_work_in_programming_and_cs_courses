@@ -31,8 +31,10 @@ directory - путь к папке содержащие необходимые �
 При возникновении ошибок при установке пакета необходимо удалить пакет и повторить установку.
 
 ## Презентации
-[Этап1](https://github.com/moevm/mse_automation_of_the_teacher_work_in_programming_and_cs_courses/raw/master/Presentations/%D0%9F%D1%80%D0%BE%D0%B5%D0%BA%D1%824_%D0%AD%D1%82%D0%B0%D0%BF1.pptx)
+[Этап1](https://github.com/moevm/mse_automation_of_the_teacher_work_in_programming_and_cs_courses/raw/master/Presentations/%D0%9F%D1%80%D0%BE%D0%B5%D0%BA%D1%824_%D0%AD%D1%82%D0%B0%D0%BF1.pptx) <br>
+[Этап2](https://github.com/moevm/mse_automation_of_the_teacher_work_in_programming_and_cs_courses/blob/master/Presentations/%D0%9F%D1%80%D0%BE%D0%B5%D0%BA%D1%824_%D0%AD%D1%82%D0%B0%D0%BF2.pptx)
 ## Демонстрация
-[Этап1](https://youtu.be/miiINJJ0cvg)
+[Этап1](https://youtu.be/miiINJJ0cvg) <br>
+[Этап2](https://youtu.be/UgXvVSltsDk)
 ## Скриншоты
 [Открыть](https://github.com/moevm/mse_automation_of_the_teacher_work_in_programming_and_cs_courses/raw/master/Screenshots)
