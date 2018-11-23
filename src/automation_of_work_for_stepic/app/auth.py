@@ -49,10 +49,11 @@ def load_logged_in_user():
     """
     user_name= session.get('user_name')
 
-    if user_name is None:
-        g.user = None
+    if stepic.token is None:
+        g.token = False
     else:
-        g.user = user_name
+        g.token = True
+        g.user = session.get('user_name')
 
     if app.config['ENV'] == 'development':
         g.dev = True
@@ -78,7 +79,8 @@ def login_required(view):
     """
     @functools.wraps(view)
     def wrapped_view(**kwargs):
-        if g.user is None:
+        if not g.token:
+            
             return render_template('error/401.html')
 
         return view(**kwargs)

@@ -36,7 +36,7 @@ ID  студента: {{info['id']}} <br>
 			<li>
                 <a href="1" class="hideLink" onclick="showHide({{section['id']}});return false;">{{section['title']}}</a><a id="{{section['id']}}-show"></a>
                 <ul id={{section['id']}} class="more">
-                    Прогресс курса: {{section['progress']}}
+                    Прогресс модуля: {{section['progress']}}
                     <br>
                     {% if section['is_passed'] %}
                         Дата: {{section['date']}}<br>
