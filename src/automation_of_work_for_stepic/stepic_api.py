@@ -76,7 +76,6 @@ class StepicAPI:
         self.response_token = None
         self.token = None
         self.token_type = None
-        self.current_user = None
 
     def load_client(self, path: str):
         """
@@ -176,7 +175,7 @@ class StepicAPI:
         if not id:
 
             user=self.current_user()
-            if not self.current_user:
+            if not self.current_user():
                 return
             return user['full_name']
         else:
