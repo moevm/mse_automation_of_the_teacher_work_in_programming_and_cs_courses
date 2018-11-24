@@ -7,7 +7,7 @@ from automation_of_work_for_stepic.InformationsProcessor import InformationsProc
 from automation_of_work_for_stepic.app.auth import login_required, stepic
 
 bp = Blueprint('page', __name__)
-get_info = InformationsProcessor(stepic)
+get_info = InformationsProcessor()
 
 
 @bp.route('/')

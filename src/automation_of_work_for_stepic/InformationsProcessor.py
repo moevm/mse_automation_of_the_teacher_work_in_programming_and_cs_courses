@@ -8,11 +8,12 @@ from datetime import datetime, date
 
 
 class InformationsProcessor:
-    def __init__(self,stepic_api):
-        self.stepic_api=stepic_api
-        self.students=[]
-        self.course=[]
+    def __init__(self):
+        self.stepic_api = stepic_api.StepicAPI()
+        self.students = []
+        self.course = []
         self.config = conf.Configuration()
+        self.courses_structure = []
 
     def download_users(self):
         table_config = self.config.get_google_table_config()
@@ -115,19 +116,16 @@ class InformationsProcessor:
                 }
         }
 
-    @staticmethod
-    def get_course_info_from_json(course_id):
+    def create_course_structures(self):
         """
-        Чтение json-а с информацией о структуре курса
-        :param course_id: str - id курса
-        :return: {} - структура курса
+        Сохраняет структуры курсов в поле InformationsProcessor
+        :return:
         """
-        if not os.path.exists(os.path.join('instance', course_id + '_info.json')):
-            print(f"Error: load course_info: path " + "instance/" + course_id + "_info.json"+ " not found")
-            return None
-        with open(os.path.join('instance', course_id + '_info.json'), 'r', encoding='utf-8') as f:
-            info = json.load(f)
-        return info
+        try:
+            self.courses_structure = [self.stepic_api.get_course_info(i['id']) for i in self.course]
+        except Exception as e:
+            print(f"Error in function create_course_structures\n\t{e}")
+            raise e
 
     def info_about_students(self, studs_id: list, courses_id: list):
         """
@@ -212,40 +210,58 @@ class InformationsProcessor:
             print(f"Error in function info_about_students (studs_id={studs_id}, courses_id={courses_id})\n\t{e}")
             raise e
 
-    def build_summary_table(self):
+    def create_table_step_info(self, course_id):
         """
-        Построение сводных данных по всем курсам и студентам
-        :return: [{}] - список информаций о прогрессе по всем курсам каждого студента
+        Возвращает таблицу вида
+        [
+            [id_stud, name_stud, id_step, date_first_solve, is_solved]
+        ]
+        с информацией о прохождении степов курса студентами
+        :param course_id: str - id курса
+        :return: [[]]
         """
         try:
             table = []
-            grades = self.course_grades()
             for stud in self.students:
-                stud_courses = []
-                for i in range(self.course.__len__()):
-                    stud_courses.append({
-                        'id': self.course[i]['id'],
-                        'title': self.course[i]['title'],
-                        'progress': grades[i][stud['id']]['progress']
-                    })
-                table.append({
-                    'name': stud['name_google'],
-                    'courses': stud_courses
-                })
+                course = [i for i in self.courses_structure if i['id'] == course_id][0]
+                student_table_rows = [self.step_info(step, stud['id']) for sect in course['sections'] for lesson in sect['lessons'] for step in lesson['steps']]
+                for row in student_table_rows:
+                    row.insert(1, stud['name_stepic'])
+                # table.append(student_table_rows) # с внутренней группировкой по студентам [[строки студента1], [строки студента2], [строки студента3]]
+                table += student_table_rows # без внутренней группировки [строки студента1, строки студента2, строки студента3]
             return table
         except Exception as e:
-            print(f"Error in function build_summary_table()\n\t{e}")
+            print(f"Error in function create_table_step_info (courses_id={course_id})\n\t{e}")
+            raise e
+
+    def step_info(self, step_id, stud_id):
+        """
+        Возвращает информацию о прохождении студентом шага = [stud_id, id_step, date_first_solve, is_solved]
+        :param step_id: str - id степа
+        :param stud_id: str - id студента
+        :return: []
+        """
+        date_correct = self.stepic_api.get_date_of_first_correct_sol_for_student(step_id, stud_id)
+        correct_flag = True
+        if date_correct:
+            date_correct = datetime.date(date_correct).strftime("%d.%m.%Y")
+        else:
+            date_correct = '-'
+            correct_flag = False
+        return [
+            stud_id,
+            step_id,
+            date_correct,
+            correct_flag
+        ]
 
 
-if __name__=="__main__":
-    aa = stepic_api.StepicAPI()
-    aa.load_token()
-    a = InformationsProcessor(aa)
+if __name__ == "__main__":
+    a = InformationsProcessor()
+    a.stepic_api.load_token()
     a.create_jsons_course()
     a.create_jsons_user()
+    a.create_course_structures()
     courses = [i['id'] for i in a.course]
     students = [i['id'] for i in a.students]
-    #aa.course_info_to_json(courses)
-    #table = a.build_summary_table()
-    full_info = a.info_about_students(students, courses)
-    print(full_info)
+    print(a.create_table_step_info(courses[0]))

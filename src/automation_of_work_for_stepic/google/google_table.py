@@ -12,7 +12,7 @@ class GoogleTable:
     Table = None
     Sheet = None
 
-    def __init__(self, key_path=os.path.join("private key for GoogleAPI.json")):
+    def __init__(self, key_path=os.path.join("resources", "private key for GoogleAPI.json")):
         """
         :param url: string - ссылка на таблицу
         :param sheet: int/string - номер/название листа таблицы
