@@ -253,24 +253,6 @@ class StepicAPI:
             print(e)
             return None
 
-    def course_info_to_json(self, id):
-        """
-        Сохраняет информацию по курсу(ам) в json(-ы)
-        :param id: str/[str] - индекс / список индексов курса
-        :return: True/False - успешная/неуспешная запись
-        """
-        try:
-            if type(id) is str:
-                with open(os.path.join("instance", str(id) + "_info.json"), "w", encoding='utf-8') as js:
-                    json.dump(self.get_course_info(id), js, indent=4, sort_keys=True, ensure_ascii=False)
-            else:
-                for course_id in id:
-                    with open(os.path.join("instance", str(course_id) + "_info.json"), "w", encoding='utf-8') as js:
-                        json.dump(self.get_course_info(course_id), js, indent=4, sort_keys=True, ensure_ascii=False)
-        except Exception as e:
-            print(f"Error in function course_info_to_json(id={id})\n\t{e}")
-            return False
-
     def get_course_info(self, course_id):
         """
         Получает информацию о курсе (структура курса)
@@ -420,8 +402,5 @@ class StepicAPI:
 if __name__ == '__main__':
     a = StepicAPI()
     a.load_token()
-    a.course_info_to_json(['88888', '37059', 'test'])
-    print(a.get_section_info('sdf'))
-    print(a.get_unit_info(100285))
-    print(a.get_lesson_info(1285002))
+    print(a.get_course_info('37059'))
 
