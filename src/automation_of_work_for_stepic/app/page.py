@@ -3,7 +3,7 @@ from flask import (
 )
 import json
 
-from automation_of_work_for_stepic.InformationsProcessor import InformationsProcessor
+from automation_of_work_for_stepic.information_processor import InformationsProcessor
 from automation_of_work_for_stepic.app.auth import login_required, stepic
 
 bp = Blueprint('page', __name__)

@@ -27,7 +27,7 @@ if __name__ == '__main__':
 
     from automation_of_work_for_stepic.stepic_api import StepicAPI
     from automation_of_work_for_stepic.configuration import Configuration
-    from automation_of_work_for_stepic.google.google_table import GoogleTable
+    from automation_of_work_for_stepic.google_table import GoogleTable
 
     StepicAPI(os.path.join(dir,file_needs_for_app[0]))
     Configuration(os.path.join(dir,file_needs_for_app[2]))

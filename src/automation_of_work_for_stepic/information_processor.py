@@ -1,4 +1,4 @@
-from automation_of_work_for_stepic.google.google_table import GoogleTable
+from automation_of_work_for_stepic.google_table import GoogleTable
 from automation_of_work_for_stepic import configuration as conf
 from automation_of_work_for_stepic import stepic_api
 import copy
