@@ -1,23 +1,32 @@
 from automation_of_work_for_stepic.google_table import GoogleTable
 from automation_of_work_for_stepic import configuration as conf
 from automation_of_work_for_stepic import stepic_api
+from automation_of_work_for_stepic.utility import singleton
 import copy
 from datetime import datetime, date
 
 
+@singleton
 class InformationsProcessor:
     def __init__(self):
         self.stepic_api = stepic_api.StepicAPI()    # для работы со StepicApi
-        self.students = []                          # содержит информацию о студентах [{'id': student_id, 'name_stepic': name_stepic, 'name_google': name_google}]
-        self.courses = []                           # содержит информацию о курсах
-        self.config = conf.Configuration()          # содержит конфигурационные данные
-        self.course_grades = []
+        self.students = []                          # информация о студентах [{'id': student_id, 'name_stepic': name_stepic, 'name_google': name_google}]
+        self.courses = []                           # информация о курсах
+        self.config = conf.Configuration()          # конфигурационные данные
+        self.course_grades = []                     # статистика курсов
+        self.incorrect = {                          # некорректные данные
+            'unknown_user_ids': [],
+            'unknown_course_ids': [],
+            'no_permission_courses': [],
+            'not_enrolled_students': {}
+        }
 
     def load_all(self):
-        self.create_courses_info()  # загрузка информации о курсе
-        self.create_students_info()  # загрузка информации о студентах
+        self.create_courses()  # загрузка информации о курсе
+        self.create_students()  # загрузка информации о студентах
         self.create_course_grades()  # загрузка информации о статистике прохождения курсов
-        self.create_info_about_student()    # создание полной информации о прохождении курсов студентами
+        self.add_course_structures()    # создание структуры курсов
+        self.add_info_about_students()    # создание полной информации о прохождении курсов студентами
 
     def download_students(self):
         """
@@ -40,7 +49,7 @@ class InformationsProcessor:
         stepic_names = self.stepic_api.get_user_name(ids)   # получение списка имён студентов на Stepic по их id
         return [ids, stepic_names, google_names]
 
-    def create_students_info(self):
+    def create_students(self):
         """
         Возвращает информацию о студентах
         self.students = [
@@ -55,34 +64,31 @@ class InformationsProcessor:
         if not self.students:
             info = self.download_students()   # получение информации о студентах
             self.students = [{'id': stud_id, 'name_stepic': info[1][i], 'name_google': info[2][i]} for i, stud_id in enumerate(info[0])]    # формирование данных о студентах
+            for student in self.students:
+                if not student['name_stepic']:
+                    print(f"Неизвестный пользователь id={student['id']}")
+                    self.incorrect['unknown_user_ids'].append(student)
+                    self.students.remove(student)
         return self.students
 
-    def create_courses_info(self):
+    def create_courses(self):
         """
         Возвращает информацию о курсах
         self.courses = [
             {
                 'id': course_id,
-                'title': course_title,
-                'sections': [
-                    {
-                        'id': 'section_id',
-                        'lessons': [
-                            {
-                                'id': 'lesson_id',
-                                'steps': ['step_id'],
-                                'title': 'lesson_title'
-                            }
-                        ],
-                        "title": "section_title"
-                    }
-                ]
+                'title': course_title
             }
         ]
         """
         if not self.courses:
             try:
-                self.courses = [self.stepic_api.get_course_info(i) for i in self.config.get_stepic_config()['id_course']]   # формирование данных о курсах
+                self.courses = [{'id': str(i), 'title': self.stepic_api.get_course_name(str(i))} for i in self.config.get_stepic_config()['id_course']]  # формирование данных о курсах
+                for course in self.courses:
+                    if not course['title']:
+                        print(f"Неизвестный курс id={course['id']}")
+                        self.incorrect['unknown_course_ids'].append(course)
+                        self.courses.remove(course)
             except Exception as e:
                 print(f"Error in function courses_info\n\t{e}")
                 raise e
@@ -111,21 +117,29 @@ class InformationsProcessor:
                 result = []
                 grades = [self.stepic_api.get_course_statistic(c['id']) for c in self.courses]  # получение статистики по курсу
                 student_ids = [st['id'] for st in self.students]   # список id всех студентов
-                for gr in grades:
-                    res_dict = {}
-                    for student in student_ids:
-                        res = [self.calculate_progress(i) for i in gr if str(i['user']) == student]    # подсчет прогресса студента
-                        # сохранение прогресса студента по курсу
-                        if res:
-                            res_dict.update(res[0])  # прогресс существует
-                        else:
-                            res_dict.update({   # прогресс отсутсвует (=студент не поступил на курс)
-                                student: {
-                                    'progress': 'Нет',
-                                    'steps': {}
-                                }
-                            })
-                    result.append(res_dict)  # сохранение прогресса студентов по курсу
+                for i, gr in enumerate(grades):
+                    if gr:
+                        res_dict = {}
+                        for student in student_ids:
+                            res = [self.calculate_progress(i) for i in gr if str(i['user']) == student]    # подсчет прогресса студента
+                            # сохранение прогресса студента по курсу
+                            if res:
+                                res_dict.update(res[0])  # прогресс существует
+                            else:
+                                if str(gr[0]['course']) not in self.incorrect['not_enrolled_students']:
+                                    self.incorrect['not_enrolled_students'].update({str(gr[0]['course']): []})
+                                self.incorrect['not_enrolled_students'][str(gr[0]['course'])].append(student)
+                                res_dict.update({   # прогресс отсутсвует (=студент не поступил на курс)
+                                    student: {
+                                        'progress': 'Нет',
+                                        'steps': {}
+                                    }
+                                })
+                        result.append(res_dict)  # сохранение прогресса студентов по курсу
+                    else:
+                        print(f"Нет доступа к курсу {self.courses[i]}")
+                        self.incorrect['no_permission_courses'].append(self.courses[i])
+                        self.courses.remove(self.courses[i])
                 self.course_grades = result
         return self.course_grades
 
@@ -161,7 +175,7 @@ class InformationsProcessor:
                 }
         }
 
-    def create_info_about_student(self):
+    def add_info_about_students(self):
         """
         Создаёт информацию о прохождении студентами курсов, дополняя элементы self.students полем
         'courses':[
@@ -251,10 +265,34 @@ class InformationsProcessor:
                     stud_courses.append(course)  # сохранение информации о курсе для студента
                 student.update({'courses': stud_courses})  # информация о курсах студента
         except Exception as e:
-            print(f"Error in function create_info_about_student\n\t{e}")
+            print(f"Error in function add_info_about_students\n\t{e}")
             raise e
 
-    def create_table_step_info(self, course_id):
+    def add_course_structures(self):
+        """
+        Создаёт информацию о структуре курса, дополняя элементы self.courses полем
+        'sections': [
+            {
+                'id': 'section_id',
+                'lessons': [
+                    {
+                        'id': 'lesson_id',
+                        'steps': ['step_id'],
+                        'title': 'lesson_title'
+                    }
+                ],
+                "title": "section_title"
+            }
+        ]
+        """
+        try:
+            for course in self.courses:   # для каждого курса
+                course['sections'] = self.stepic_api.course_structure(course['id'])     # получение структуры курса
+        except Exception as e:
+            print(f"Error in function add_course_structures\n\t{e}")
+            raise e
+
+    def table_step_info(self, course_id):
         """
         Возвращает таблицу вида
         [
@@ -275,7 +313,7 @@ class InformationsProcessor:
                 table += student_table_rows  # без внутренней группировки [строки студента1, строки студента2, строки студента3]
             return table
         except Exception as e:
-            print(f"Error in function create_table_step_info (courses_id={course_id})\n\t{e}")
+            print(f"Error in function table_step_info (courses_id={course_id})\n\t{e}")
             raise e
 
     def short_step_info(self, step_id, stud_id):
@@ -310,9 +348,19 @@ class InformationsProcessor:
             print(f"Error in function get_student_info (stud_id={stud_id})\n\t{e}")
             raise e
 
+    def get_course_by_id(self, course_id: str):
+        try:
+            course = [course for course in self.courses if course_id == course['id']]
+            if course:
+                return course[0]
+            else:
+                print(f"Неинициализированный курс id={course_id}")
+        except Exception as e:
+            print(f"Error in function get_course_by_id (course_id={course_id})\n\t{e}")
+            raise e
 
 if __name__ == "__main__":
     a = InformationsProcessor()
     a.stepic_api.load_token()
     a.load_all()
-    print(a.create_table_step_info(a.courses[0]['id']))
+    print(a.table_step_info(a.courses[0]['id']))

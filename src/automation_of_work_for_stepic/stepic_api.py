@@ -223,7 +223,7 @@ class StepicAPI:
                 course = a.json()['courses'][0]
                 return course['title']
             except Exception as e:
-                print(e)
+                print('Error get_course_name id =', id, e)
                 return None
         else:
             courses_titles = []
@@ -250,50 +250,38 @@ class StepicAPI:
                 'course-grades']
             return grades
         except Exception as e:
-            print(e)
+            print('Error get_course_statistic id = ', id, e)
             return None
 
-    def get_course_info(self, course_id):
+    def course_structure(self, course_id):
         """
-        Получает информацию о курсе (структура курса)
+        Получает информацию о структуре курса
         :param course_id: str - индекс курса
-        :return: {}, содержащий название, id и список секций/модулей курса
+        :return: список секций/модулей курса
         """
         try:
-            course = requests.get(self.url_api + 'courses/' + str(course_id), headers=self._headers).json()["courses"][
-                0]
-            info_sections = []
-            for section_id in course['sections']:
-                info_sections.append(self.get_section_info(section_id))
-            return {
-                "title": course['title'],
-                "id": str(course['id']),
-                "sections": info_sections
-            }
+            course = requests.get(self.url_api + 'courses/' + str(course_id), headers=self._headers).json()["courses"][0]
+            return [self.section_structure(section_id) for section_id in course['sections']]
         except Exception as e:
-            print(f"Error in function get_course_info(course_id={course_id})\n\t{e}")
+            print(f"Error in function course_structure(course_id={course_id})\n\t{e}")
 
-    def get_section_info(self, section_id):
+    def section_structure(self, section_id):
         """
         Получает информацию о секции/модуле курса
         :param section_id: str - индекс секции/модуля
         :return: {}, содержащий название, id и список уроков секции/модуля
         """
         try:
-            section = \
-            requests.get(self.url_api + 'sections/' + str(section_id), headers=self._headers).json()['sections'][0]
-            lessons = []
-            for unit_id in section['units']:
-                lessons.append(self.get_unit_info(unit_id))
+            section = requests.get(self.url_api + 'sections/' + str(section_id), headers=self._headers).json()['sections'][0]
             return {
                 "title": section['title'],
                 "id": str(section['id']),
-                "lessons": lessons
+                "lessons": [self.unit_structure(unit_id) for unit_id in section['units']]
             }
         except Exception as e:
-            print(f"Error in function get_section_info(section_id={section_id})\n\t{e}")
+            print(f"Error in function section_structure(section_id={section_id})\n\t{e}")
 
-    def get_unit_info(self, unit_id):
+    def unit_structure(self, unit_id):
         """
         Получает информацию о блоке
         :param unit_id: str - индекс блока
@@ -301,26 +289,25 @@ class StepicAPI:
         """
         try:
             unit = requests.get(self.url_api + 'units/' + str(unit_id), headers=self._headers).json()['units'][0]
-            return self.get_lesson_info(str(unit['lesson']))
+            return self.lesson__structure(str(unit['lesson']))
         except Exception as e:
-            print(f"Error in function get_unit_info(unit_id={unit_id})\n\t{e}")
+            print(f"Error in function unit_structure(unit_id={unit_id})\n\t{e}")
 
-    def get_lesson_info(self, lesson_id):
+    def lesson__structure(self, lesson_id):
         """
         Получает информацию об уроке
         :param lesson_id: str - индекс урока
         :return: {}, содержащий информацию об уроке блока
         """
         try:
-            lesson = requests.get(self.url_api + 'lessons/' + str(lesson_id), headers=self._headers).json()['lessons'][
-                0]
+            lesson = requests.get(self.url_api + 'lessons/' + str(lesson_id), headers=self._headers).json()['lessons'][0]
             return {
                 "title": lesson['title'],
                 "id": str(lesson['id']),
                 "steps": [str(i) for i in lesson['steps']]
             }
         except Exception as e:
-            print(f"Error in function get_lesson_info(lesson_id={lesson_id})\n\t{e}")
+            print(f"Error in function lesson__structure(lesson_id={lesson_id})\n\t{e}")
 
     def get_date_of_first_correct_sol(self, step_id):
         """
@@ -402,5 +389,5 @@ class StepicAPI:
 if __name__ == '__main__':
     a = StepicAPI()
     a.load_token()
-    print(a.get_course_info('37059'))
+    print(a.course_structure('37059'))
 
