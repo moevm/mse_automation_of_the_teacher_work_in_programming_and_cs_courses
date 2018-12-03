@@ -6,17 +6,19 @@
     "FIO_Col": "a",
     "FIO_Rows": [
       2,
-      8
+      9
     ],
     "ID_Col": "B",
     "ID_Rows": [
       2,
-      8
+      9
     ]
   },
   "stepic": {
     "id_course": [
-      37059
+      37059,
+      67,
+      888888
     ]
   }
 }
