@@ -182,7 +182,7 @@ class StepicAPI:
         Вовзращает список full_name-ов для пользователей если id передается
         Если id не передается, возвращается full_name текущего пользотеля
         :param id: список id или один id пользователей
-        :return: list[full_name]
+        :return: dict(id:name)
         """
         if not id:
 
