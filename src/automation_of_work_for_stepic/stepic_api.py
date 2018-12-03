@@ -15,6 +15,8 @@ class StepicAPI:
         self.url_auth = "https://stepik.org/oauth2/"
         self.client_id, self.client_secret = self.load_client(file_client)
 
+        self.MAX_IDS=10
+
         self.response_token = None
         self.token = None
         self.token_type = None
@@ -140,6 +142,16 @@ class StepicAPI:
             return {'Authorization': self.token_type + ' ' + self.token}
         return None
 
+    def create_query_string_ids(self,ids):
+        """
+        Создает строку запроса для нескольких id
+        :param ids: ids  - list
+        :return: query string - str
+        """
+        template = '&ids[]={}'
+        return '?'+(template*len(ids)).format(*ids)[1:]
+
+
     def current_user(self):
         """
         Возвращает информацию о текущем толькователе
@@ -186,14 +198,16 @@ class StepicAPI:
                 except:
                     return None
             else:
-                students_fn = []
-                for user_id in id:
+                names_dict=dict.fromkeys(id,None)
+                for i in range(0,len(id),self.MAX_IDS):
+                    part_list=id[i:i+self.MAX_IDS]
                     try:
-                        user = requests.get(self.url_api + 'users/' + str(user_id)).json()['users'][0]
-                        students_fn.append(user['full_name'])
+                        users = requests.get(self.url_api + 'users' + self.create_query_string_ids(part_list)).json()['users']
+                        names_dict.update({str(user['id']):user['full_name'] for user in users})
                     except:
-                        students_fn.append(None)
-                return students_fn
+                        print("Error requests users")
+                return names_dict
+
 
     def download_user(self, ids):
         """
@@ -389,5 +403,5 @@ class StepicAPI:
 if __name__ == '__main__':
     a = StepicAPI()
     a.load_token()
-    print(a.course_structure('37059'))
+    print(a.get_user_name(['1','999999999','12','2686236','123456','3758']))
 
