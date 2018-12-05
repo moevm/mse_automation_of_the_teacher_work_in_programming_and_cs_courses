@@ -251,7 +251,6 @@ class StepicAPI:
                     courses_titles.append(None)
             return courses_titles
 
-
     def get_course_statistic(self, id):
         """
         возвращающает json или список json-ов со статистикой о курсе
@@ -399,9 +398,98 @@ class StepicAPI:
             print(
                 f"Error in function get_date_of_first_wrong_sol_for_student(step_id={step_id}, student_id={student_id})")
 
+    def get_date_of_sol_for_student(self, step_id, student_id):
+        """
+        Возвращает дату первого неудачного решения степа студентом
+        :param step_id: id степа
+        :param student_id: id студента
+        :return: datetime object - дата первого неудачного решения студента
+        """
+        try:
+            step_submissions = requests.get(
+                self.url_api + 'submissions?&step=' + str(step_id) + '&user=' + str(
+                    student_id) + '&order=asc', headers=self._headers).json()['submissions']
+            if len(step_submissions) != 0:
+                date = datetime.strptime(str(step_submissions[0]['time']), '%Y-%m-%dT%H:%M:%SZ')
+                return date
+            else:
+                return None
+        except:
+            print(
+                f"Error in function get_date_of_first_wrong_sol_for_student(step_id={step_id}, student_id={student_id})")
+
+    def course(self,course_id,attribute=['id','title','sections','actions']):
+        """
+        Возвращает информацию о курсe
+        """
+        try:
+            course = requests.get(self.url_api + 'courses' + self.create_query_string_ids([course_id]) ,headers=self._headers).json()['courses']
+        except:
+            print("Error requests users")
+
+        if course:
+            return {attr: course[0][attr] for attr in attribute}
+
+
+    def sections(self,ids,attribute=['id','title','units']):
+        sections_dict = dict.fromkeys(ids, None)
+        for i in range(0, len(ids), self.MAX_IDS):
+            part_list = ids[i:i + self.MAX_IDS]
+            try:
+                sections = requests.get(self.url_api + 'sections' + self.create_query_string_ids(part_list),
+                                       headers=self._headers).json()['sections']
+
+                sections_dict.update(
+                    {section['id']: {attr: section[attr] for attr in attribute} for section in sections})
+            except:
+                print("Error requests users")
+        return sections_dict
+
+    def units(self,ids):
+        units_dict = dict.fromkeys(ids, None)
+        for i in range(0, len(ids), self.MAX_IDS):
+            part_list = ids[i:i + self.MAX_IDS]
+            try:
+                units = requests.get(self.url_api + 'units' + self.create_query_string_ids(part_list),
+                                       headers=self._headers).json()['units']
+
+                units_dict.update(
+                    {unit['id']: unit['lesson'] for unit in units})
+            except:
+                print("Error requests users")
+        return units_dict
+
+    def lessons(self,ids,attribute=['id','title','steps']):
+        lessons_dict = dict.fromkeys(ids, None)
+        for i in range(0, len(ids), self.MAX_IDS):
+            part_list = ids[i:i + self.MAX_IDS]
+            try:
+                lessons = requests.get(self.url_api + 'lessons' + self.create_query_string_ids(part_list),
+                                       headers=self._headers).json()['lessons']
+
+                lessons_dict.update(
+                    {lesson['id']: {attr: lesson[attr] for attr in attribute} for lesson in lessons})
+            except:
+                print("Error requests users")
+        return lessons_dict
+
+
+    def steps(self,ids,attribute=['id','position','actions']):
+        steps_dict = dict.fromkeys(ids, None)
+        for i in range(0, len(ids), self.MAX_IDS):
+            part_list = ids[i:i + self.MAX_IDS]
+            try:
+                steps = requests.get(self.url_api + 'steps' + self.create_query_string_ids(part_list),
+                                       headers=self._headers).json()['steps']
+
+                steps_dict.update(
+                    {step['id']: {attr: step[attr] for attr in attribute} for step in steps})
+            except:
+                print("Error requests users")
+        return steps_dict
 
 if __name__ == '__main__':
     a = StepicAPI()
     a.load_token()
-    print(a.get_user_name(['1','999999999','12','2686236','123456','3758']))
+    print(a.courses(['37059','1','123456','2345678987654']))
 

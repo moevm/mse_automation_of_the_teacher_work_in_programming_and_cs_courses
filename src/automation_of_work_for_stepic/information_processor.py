@@ -378,6 +378,12 @@ class InformationsProcessor:
             print(f"Error in function get_course_by_id (course_id={course_id})\n\t{e}")
             raise e
 
+    def create_grades_steps(self):
+        """
+        Скачивает course grades и добавляет даты первых правильных и не правильных решений
+        :return:
+        """
+        pass
 
 if __name__ == "__main__":
     a = InformationsProcessor()
