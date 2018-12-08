@@ -46,7 +46,7 @@ class InformationsProcessor:
         google_names = a.get_list(table_config['FIO_Col'], table_config['FIO_Rows'][0], table_config['FIO_Rows'][1])    # получение списка имен студентов из google-таблицы
         ids = a.get_list(table_config['ID_Col'], table_config['ID_Rows'][0], table_config['ID_Rows'][1])    # получение списка id студентов на Stepic из google-таблицы
 
-        stepic_names = self.stepic_api.get_user_name(ids)   # получение списка имён студентов на Stepic по их id
+        stepic_names = self.stepic_api.user_name(ids)   # получение списка имён студентов на Stepic по их id
         return [ids, stepic_names, google_names]
 
     def create_students(self):
@@ -83,7 +83,7 @@ class InformationsProcessor:
         """
         if not self.courses:
             try:
-                self.courses = [{'id': str(i), 'title': self.stepic_api.get_course_name(str(i))} for i in self.config.get_stepic_config()['id_course']]  # формирование данных о курсах
+                self.courses = [{'id': str(i), 'title': self.stepic_api.course_title(str(i))} for i in self.config.get_stepic_config()['id_course']]  # формирование данных о курсах
                 for course in self.courses:
                     if not course['title']:
                         print(f"Неизвестный курс id={course['id']}")
@@ -115,7 +115,7 @@ class InformationsProcessor:
         if not self.course_grades:
             if self.students and self.courses:
                 result = []
-                grades = [self.stepic_api.get_course_statistic(c['id']) for c in self.courses]  # получение статистики по курсу
+                grades = [self.stepic_api.course_statistic(c['id']) for c in self.courses]  # получение статистики по курсу
                 student_ids = [st['id'] for st in self.students]   # список id всех студентов
                 for i, gr in enumerate(grades):
                     if gr:
@@ -224,7 +224,7 @@ class InformationsProcessor:
                                 for step in lesson['steps']:    # для всех шагов урока
                                     if step in self.course_grades[i][student['id']]['steps']:  # если шаг существует в статистике(шаг с решением)
                                         step_counter += 1   # увеличение счетчика шагов
-                                        date_correct = self.stepic_api.get_date_of_first_correct_sol_for_student(step, student['id'])  # получение даты первого верного решения
+                                        date_correct = self.stepic_api.date_of_first_correct_sol_for_student(step, student['id'])  # получение даты первого верного решения
                                         if date_correct:
                                             correct_step_counter += 1   # если дата существует - шаг пройден - увеличение счетчига верно решенных шагов
                                             date_correct = datetime.date(date_correct)
@@ -233,7 +233,7 @@ class InformationsProcessor:
                                             date_correct = date_correct.strftime("%d.%m.%Y")
                                         else:
                                             date_correct = '-'  # верное решение отсутсвует - шаг не пройден
-                                        date_wrong = self.stepic_api.get_date_of_first_wrong_sol_for_student(step, student['id'])  # получение даты первого неверного решения
+                                        date_wrong = self.stepic_api.date_of_first_wrong_sol_for_student(step, student['id'])  # получение даты первого неверного решения
                                         if date_wrong:
                                             date_wrong = datetime.date(date_wrong).strftime("%d.%m.%Y")
                                         else:
@@ -323,7 +323,7 @@ class InformationsProcessor:
         :param stud_id: str - id студента
         :return: []
         """
-        date_correct = self.stepic_api.get_date_of_first_correct_sol_for_student(step_id, stud_id)
+        date_correct = self.stepic_api.date_of_first_correct_sol_for_student(step_id, stud_id)
         is_passed = True
         if date_correct:
             date_correct = datetime.date(date_correct).strftime("%d.%m.%Y")

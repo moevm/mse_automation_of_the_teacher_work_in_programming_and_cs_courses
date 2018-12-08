@@ -34,7 +34,7 @@ def login():
         #очищаем ссесию
         session.clear()
         session['user_id'] = stepic.current_user_id()
-        session['user_name'] = stepic.get_user_name()
+        session['user_name'] = stepic.user_name()
         return redirect(url_for('index'))
     else:
         return render_template('error/401.html')
@@ -93,7 +93,7 @@ def login_stepic():
     Авторизация пользователя через степик
     :return:
     """
-    return redirect(stepic.get_url_authorize(redirect_uri))
+    return redirect(stepic.url_authorize(redirect_uri))
 
 @bp.route('/login_dev')
 def login_dev():
@@ -106,8 +106,8 @@ def login_dev():
         # очищаем ссесию
         session.clear()
         session['user_id'] = stepic.current_user_id()
-        session['user_name']= stepic.get_user_name()
+        session['user_name']= stepic.user_name()
         return redirect(url_for('index'))
     else:
         #переходим на авторизаци степика
-        return redirect(stepic.get_url_authorize(redirect_uri))
+        return redirect(stepic.url_authorize(redirect_uri))
