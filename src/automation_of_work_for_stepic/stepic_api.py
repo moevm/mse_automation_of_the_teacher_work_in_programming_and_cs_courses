@@ -288,7 +288,7 @@ class StepicAPI:
                 print("Error requests users")
         return sections_dict
 
-    def units(self, ids):
+    def units(self, ids, attribute=['lesson']):
         units_dict = dict.fromkeys(ids, None)
         for i in range(0, len(ids), self.MAX_IDS):
             part_list = ids[i:i + self.MAX_IDS]
@@ -297,7 +297,7 @@ class StepicAPI:
                                      headers=self._headers).json()['units']
 
                 units_dict.update(
-                    {unit['id']: unit['lesson'] for unit in units})
+                    {unit['id']: {attr: unit[attr] for attr in attribute} for unit in units})
             except:
                 print("Error requests users")
         return units_dict

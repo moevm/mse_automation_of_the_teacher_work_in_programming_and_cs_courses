@@ -3,7 +3,7 @@ from flask import (
 )
 import json
 
-from automation_of_work_for_stepic.information_processor import InformationsProcessor
+from automation_of_work_for_stepic.information_processor2 import InformationsProcessor
 from automation_of_work_for_stepic.app.auth import login_required, stepic
 
 bp = Blueprint('page', __name__)
@@ -13,12 +13,13 @@ get_info = InformationsProcessor()
 @bp.route('/')
 @login_required
 def index():
-    a = get_info.create_students()
-    b = get_info.create_courses()
-    c = get_info.create_course_grades()
-    get_info.add_course_structures()
-    get_info.add_info_about_students()
-    return render_template('page/index.html', names=a, course=b, progress=c)
+    # a = get_info.create_students()
+    # b = get_info.create_courses()
+    # c = get_info.create_course_grades()
+    # get_info.add_course_structures()
+    # get_info.add_info_about_students()
+    a,b=get_info.get_progress_table()
+    return render_template('page/index.html', students=a, course=b)
 
 
 @bp.route('/start')
