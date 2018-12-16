@@ -51,6 +51,7 @@ class Course(Document):
     title = StringField(max_length=100, required=True)
     sections = ListField(IntField(), required=True)
 
+
 class Grade(Document):
     student = IntField(required=True)
     step = IntField(required=True)

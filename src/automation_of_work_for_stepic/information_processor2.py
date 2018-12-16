@@ -11,7 +11,7 @@ from datetime import datetime, date
 
 import cProfile
 
-connect('stepic', host='192.168.99.100', port=32769)
+connect('stepic', host='192.168.99.100', port=32768)
 
 
 def profile(func):
@@ -122,17 +122,18 @@ class InformationsProcessor:
             for v in steps_id.values():
                 self.create_grades_for_one_student_1(s, v)
 
+        # считаем прогресс элементов курса
         self.create_progress()
 
-        import pprint
-        pp = pprint.PrettyPrinter(indent=4)
-        pp.pprint(unknow_user)
-        pp.pprint(unknow_course)
-        pp.pprint(no_permission_course)
-
-        pp.pprint(S_id)
-        pp.pprint(C_id)
-        pp.pprint(steps_id)
+        # import pprint
+        # pp = pprint.PrettyPrinter(indent=4)
+        # pp.pprint(unknow_user)
+        # pp.pprint(unknow_course)
+        # pp.pprint(no_permission_course)
+        #
+        # pp.pprint(S_id)
+        # pp.pprint(C_id)
+        # pp.pprint(steps_id)
 
     def get_config_google_data(self):
         """
@@ -452,8 +453,7 @@ class InformationsProcessor:
         # удаляем временную информацию
         for k, v in steps.items():
             if 'submit' not in v['actions']:
-                steps_id.remove(k)
-
+                Lesson.objects.with_id(v['lesson']).update(pull__steps=k)
             else:
                 v.pop('actions')
                 # добавляем в базу
@@ -467,19 +467,19 @@ class InformationsProcessor:
                 pr_c = 0
                 count_c = 0
                 for s in Section.objects.filter(course=c):
-                    pr_s=0
-                    count_s=0
-                    for l in Lesson.objects.filter(section=s):
+                    pr_s = 0
+                    count_s = 0
+                    for l in Lesson.objects.filter(section=s.id):
                         pr_l = Grade.progress(student=st, steps=l.steps)
                         Student.add_progress(student=st, lesson=l.id, progress=pr_l)
 
-                        pr_s+=pr_l*len(l.steps)
-                        count_s+=len(l.steps)
+                        pr_s += pr_l * len(l.steps)
+                        count_s += len(l.steps)
 
-                    Student.add_progress(student=st, section=s.id, progress=pr_s/count_s)
+                    Student.add_progress(student=st, section=s.id, progress=pr_s / count_s)
 
-                    pr_c+=pr_s
-                    count_c+=count_s
+                    pr_c += pr_s
+                    count_c += count_s
 
                 Student.add_progress(student=st, course=c, progress=pr_c / count_c)
 
@@ -491,35 +491,39 @@ class InformationsProcessor:
         # создаем список курсов
 
         C = [Course.objects.exclude('sections').with_id(c) for c in course_id]
-        S = [Student.objects.only('id', 'name_google','progress_courses').with_id(s) for s in student_id]
+        S = [Student.objects.only('id', 'name_google', 'progress_courses').with_id(s) for s in student_id]
 
         print(C)
         print(S)
-        return S, C, G
+        return S,C
 
-    def get_student_page(self,student_id):
+    def get_student_page(self, student_id):
         course_id = [37059]
-        s=Student.objects.with_id(student_id)
-        s.name_google
-        s.stepic_name
-        for c in course_id:
-            Course.objects.only('title').with_id(c).title
-            s.progress_courses[str(c)]
-            for s in Section.objects.filter(course=c):
-                s.title
-                s.progress_sections[str(s)]
-                for l in Lesson.objects.filter(section=s):
-                    l.title
-                    l.progress_sections[str(l)]
-                    for s in l.steps:
-                        # название факт прохождения корректно некорректно
-                        Step.objects.only('position').with_id(s).position
-                        g=Grade.objects.filter(student=student_id,step=s).first()
-                        g.is_passed
-                        g.wrong_date
-                        g.correct_date
 
-    def get_course_page(self,course_id):
+        st = Student.objects.with_id(student_id)
+        co = Course.objects.filter(id__in=course_id)
+
+        # print(st.name_google)
+        # print(st.name_stepic)
+        #
+        # for c in co:
+        #     print(c.title)
+        #     print(st.progress_courses[str(c.id)])
+        #     for s in Section.objects.filter(course=c.id):
+        #         print('\t',s.title)
+        #         print('\t',st.progress_sections[str(s.id)])
+        #         for l in Lesson.objects.filter(section=s.id):
+        #             print('\t','\t',l.title)
+        #             print('\t','\t',st.progress_lessons[str(l.id)])
+        #             for sp in l.steps:
+        #                 print(Step.objects.with_id(sp).position)
+        #                 g = Grade.objects.filter(student=st.id, step=sp).first()
+        #                 print('\t','\t','\t',g.is_passed)
+        #                 print('\t','\t','\t',g.wrong_date)
+        #                 print('\t','\t','\t',g.correct_date)
+        return st,co,Section,Lesson,Step,Grade
+
+    def get_course_page(self, course_id):
         student_id = [59934516, 19671119, 19618699, 19679512, 19618655, 2686236]
         Course.objects.only('title').with_id(course_id).title
         for s in Section.objects.filter(course=course_id):
@@ -530,15 +534,13 @@ class InformationsProcessor:
                     for s in l.steps:
                         # название факт прохождения корректно некорректно
                         Step.objects.only('position').with_id(s).position
-                        g=Grade.objects.filter(student=st,step=s).first()
+                        g = Grade.objects.filter(student=st, step=s).first()
                         g.is_passed
-
-
 
 
 if __name__ == "__main__":
     a = InformationsProcessor()
+    a.stepic_api.load_token()
     # a.stepic_api.load_token()
-    connect('stepic', host='192.168.99.100', port=32769)
-    # a.main_1()
-    a.get_progress_table()
+    #a.main_1()
+    a.main_1()
