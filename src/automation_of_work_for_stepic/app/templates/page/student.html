@@ -21,7 +21,7 @@
 </script>
 
 ID  студента: {{info['id']}} <br>
-Имя студента с гугл таблице : {{info['name_google']}} <br>
+Имя студента в гугл таблице : {{info['name_google']}} <br>
 Имя студента в степике: {{info['name_stepic']}} <br>
 Курсы <br>
 
@@ -45,19 +45,29 @@ ID  студента: {{info['id']}} <br>
                     {%- for lesson in section['lessons'] %}
 			        <li>
                          <a href="1" class="hideLink" onclick="showHide({{lesson['id']}});return false;">{{lesson['title']}}</a><a id="{{lesson['id']}}-show"></a>
-                        <ul id={{lesson['id']}} class="more">
-                            {%- for step in lesson['steps'] %}
-			                <li>{{step['id']}}<br>
-                                Решен: {{step['is_passed']}} <br>
-                                {% if step['is_passed'] %}
-                                Первое правильное решение: {{step['first_true']}}<br>
-                                {% endif %}
-                                Первое неверное решение: {{step['first_false']}}<br>
-                                <br>
-                            </li>
-                            {%- endfor %}
-		                </ul>
-                        <br>
+                         <ul id={{lesson['id']}} class="more">
+                             <table class="blueTable">
+                                 <thead>
+                                 <tr>
+                                     <th>Степ</th>
+                                     <th>Решен</th>
+                                     <th>Дата верного решения</th>
+                                     <th>Дата неверного решения</th>
+                                 </tr>
+                                 </thead>
+                                 <tbody>
+                                    {% for step in lesson['steps']%}
+                                    <tr>
+                                         <th>{{step['id']}}</th>
+                                         <th>{{step['is_passed']}}</th>
+                                         <th>{{step['first_true']}}</th>
+                                         <th>{{step['first_false']}}</th>
+                                     </tr>
+                                     {%- endfor %}
+                                 </tbody>
+                             </table>
+		                 </ul>
+                         <br>
                     </li>
                     {%- endfor %}
 		        </ul>

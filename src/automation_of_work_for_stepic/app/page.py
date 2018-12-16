@@ -23,7 +23,7 @@ def index():
 
 @bp.route('/start')
 def start_page():
-    return render_template('page/start.html')
+    return render_template('page/start.html', config=get_info.config)
 
 
 @bp.route('/students/<int:id>')
