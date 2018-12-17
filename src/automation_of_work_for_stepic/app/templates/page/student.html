@@ -30,32 +30,41 @@ ID  студента: {{student.id}} <br>
 	<li>
         <a href="1" class="hideLink" onclick="showHide({{course.id}});return false;">{{course.title}}</a><a id="{{course.id}}-show"></a>
 		<ul id={{course.id}} class="more">
-            Прогресс: {{student.progress_courses[course.id.__str__()]}} <br>
-            <br>
-            Дата: {{0}}<br>
-            <br>
+            Прогресс: {{student.progress_courses.get(course.id.__str__(),0.0).__round__(2)}} <br>
+            {% if student.progress_courses.get('date'+course.id.__str__()) %}
+                Дата: {{student.progress_courses.get('date'+course.id.__str__()).strftime("%d.%m.%y")}}<br>
+            {% endif %}
+                <br>
             {%- for section in Section.objects.filter(course=course.id) %}
 			<li>
                 <a href="1" class="hideLink" onclick="showHide({{section.id}});return false;">{{section.title}}</a><a id="{{section.id}}-show"></a>
                 <ul id={{section.id}} class="more">
-                    Прогресс: {{student.progress_sections[section.id.__str__()]}}
-                    <br>
-                    Дата: {{0}}<br>
-                    <br>
+                    Прогресс: {{student.progress_sections.get(section.id.__str__(),0.0).__round__(2)}}<br>
+                    {% if student.progress_sections.get('date'+section.id.__str__()) %}
+                        Дата: {{student.progress_sections.get('date'+section.id.__str__()).strftime("%d.%m.%y")}}<br>
+                    {% endif %}
+                        <br>
                     {%- for lesson in Lesson.objects.filter(section=section.id)%}
 			        <li>
                          <a href="1" class="hideLink" onclick="showHide({{lesson.id}});return false;">{{lesson.title}}</a><a id="{{lesson.id}}-show"></a>
                         <ul id={{lesson.id}} class="more">
-                            Прогресс: {{student.progress_lessons[lesson.id.__str__()]}}
-                            <br>
-                            Дата: {{0}}<br>
+                            Прогресс: {{student.progress_lessons.get(lesson.id.__str__()).__round__(2)}}<br>
+                            {% if student.progress_lessons.get('date'+lesson.id.__str__())%}
+                                Дата: {{student.progress_lessons.get('date'+lesson.id.__str__()).strftime("%d.%m.%y")}}<br>
+                            {% endif %}
                             <br>
                             {%- for step in lesson.steps %}
                             {% set grade = Grade.objects.filter(student=student.id, step=step).first() %}
 			                <li>{{Step.objects.with_id(step).position}}<br>
                                 Решен: {{grade.is_passed}} <br>
-                                Первое правильное решение: {{grade.correct_date}}<br>
-                                Первое неверное решение: {{grade.wrong_date}}<br>
+                                {% if grade.is_passed %}
+                                Первое правильное решение: {{grade.correct_date.strftime("%d.%m.%y")}}<br>
+                                {% endif %}
+                                {% if grade.wrong_date %}
+                                Первое неверное решение: {{grade.wrong_date.strftime("%d.%m.%y")}}<br>
+                                {% else %}
+                                Первое неверное решение: Нет
+                                {% endif %}
                                 <br>
                             </li>
                             {%- endfor %}
