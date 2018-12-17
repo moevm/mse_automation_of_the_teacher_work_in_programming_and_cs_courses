@@ -96,3 +96,60 @@ padding-left: 8px;
 a.showLink:hover, a.hideLink:hover {
 color: #36f;
 }
+
+table.redTable {
+  border: 1px solid #1C6EA4;
+  background-color: #EEEEEE;
+  text-align: left;
+  border-collapse: collapse;
+}
+table.redTable td, table.redTable th {
+  border: px solid #AAAAAA;
+  padding: 3px 5px;
+}
+table.redTable tbody td {
+  font-size: 13px;
+}
+table.redTable tr:nth-child(even) {
+  background: #D0E4F5;
+}
+table.redTable thead {
+  background: #C4B0C3;
+  background: -moz-linear-gradient(top, #AB99A9 0%, #B8A5B6 66%, #C4B0C3 100%);
+  background: -webkit-linear-gradient(top, #AB99A9 0%, #B8A5B6 66%, #C4B0C3 100%);
+  background: linear-gradient(to bottom, #AB99A9 0%, #B8A5B6 66%, #C4B0C3 100%);
+  border-bottom: 2px solid #444444;
+}
+table.redTable thead th {
+  font-size: 15px;
+  font-weight: bold;
+  color: #6D5FC4;
+  border-left: 2px solid #D0E4F5;
+}
+table.redTable thead th:first-child {
+  border-left: none;
+}
+
+table.redTable tfoot {
+  font-size: 14px;
+  font-weight: bold;
+  color: #FFFFFF;
+  background: #D0E4F5;
+  background: -moz-linear-gradient(top, #dcebf7 0%, #d4e6f6 66%, #D0E4F5 100%);
+  background: -webkit-linear-gradient(top, #dcebf7 0%, #d4e6f6 66%, #D0E4F5 100%);
+  background: linear-gradient(to bottom, #dcebf7 0%, #d4e6f6 66%, #D0E4F5 100%);
+  border-top: 2px solid #444444;
+}
+table.redTable tfoot td {
+  font-size: 14px;
+}
+table.redTable tfoot .links {
+  text-align: right;
+}
+table.redTable tfoot .links a{
+  display: inline-block;
+  background: #1C6EA4;
+  color: #FFFFFF;
+  padding: 2px 8px;
+  border-radius: 5px;
+}

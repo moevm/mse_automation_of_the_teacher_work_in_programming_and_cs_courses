@@ -53,21 +53,41 @@ ID  студента: {{student.id}} <br>
                                 Дата: {{student.progress_lessons.get('date'+lesson.id.__str__()).strftime("%d.%m.%y")}}<br>
                             {% endif %}
                             <br>
+
+                            <table class="redTable">
+                            <thead>
+
+                            <tr>
+                                <th> Степ </th>
+                                <th> Решен </th>
+                                <th> Дата правильного решения </th>
+                                <th> Дата неправильного решения </th>
+                            </tr>
+                            </thead>
+                            <tbody>
                             {%- for step in lesson.steps %}
                             {% set grade = Grade.objects.filter(student=student.id, step=step).first() %}
-			                <li>{{Step.objects.with_id(step).position}}<br>
-                                Решен: {{grade.is_passed}} <br>
+                            <tr>
+                                <td>Q{{Step.objects.with_id(step).position}}</td>
                                 {% if grade.is_passed %}
-                                Первое правильное решение: {{grade.correct_date.strftime("%d.%m.%y")}}<br>
+                                    <td>1</td>
+                                    {% else %}
+                                    <td>0</td>
+                                {% endif %}
+                                {% if grade.is_passed %}
+                                <td>{{grade.correct_date.strftime("%d.%m.%y")}}</td>
+                                {% else %}
+                                <td> - </td>
                                 {% endif %}
                                 {% if grade.wrong_date %}
-                                Первое неверное решение: {{grade.wrong_date.strftime("%d.%m.%y")}}<br>
+                                <td>{{grade.wrong_date.strftime("%d.%m.%y")}}</td>
                                 {% else %}
-                                Первое неверное решение: Нет
+                                <td> - </td>
                                 {% endif %}
-                                <br>
-                            </li>
+                            </tr>
                             {%- endfor %}
+                            </tbody>
+                            </table>
 		                </ul>
                         <br>
                     </li>

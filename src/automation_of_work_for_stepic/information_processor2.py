@@ -32,8 +32,8 @@ class InformationsProcessor:
         self.stepic_api = stepic_api.StepicAPI()
         self.config = conf.Configuration()  # конфигурационные данные
 
-        self.courses = None
-        self.students = None
+        self.students = [59934516, 19671119, 19618699, 19679512, 19618655, 2686236]
+        self.courses = [37059]
 
     def main_1(self):
         course_id = []
@@ -71,6 +71,28 @@ class InformationsProcessor:
 
         # считаем прогресс элементов курса
         self.create_progress()
+
+    def get_config_google_data(self):
+        """
+        Возвращает список список курсов из конфига и список студентов из гугл таблицы
+        """
+        table_config = self.config.get_google_table_config()  # получение конфигурационных данных о google-таблицы
+        a = GoogleTable()
+        a.set_table(table_config['URL'], table_config['Sheet'])  # получение таблицы
+
+        google_names_students = a.get_list(table_config['FIO_Col'], table_config['FIO_Rows'][0],
+                                           table_config['FIO_Rows'][
+                                               1])  # получение списка имен студентов из google-таблицы
+        students_id = a.get_list(table_config['ID_Col'], table_config['ID_Rows'][0],
+                                 table_config['ID_Rows'][
+                                     1])  # получение списка id студентов на Stepic из google-таблицы
+
+        courses_id = self.config.get_stepic_config()['id_course']
+
+        students_id = [int(i) for i in students_id]
+        courses_id = [int(i) for i in courses_id]
+
+        return courses_id, students_id, google_names_students
 
     def create_students(self, ids, google_names):
         stepic_names = self.stepic_api.get_user_name(ids)
@@ -160,7 +182,7 @@ class InformationsProcessor:
 
             Lesson(section=u['section'], **(lessons[u['lesson']])).save()
 
-        self.create_steps(steps_id)
+        steps_id=self.create_steps(steps_id)
         return units, steps_id
 
     def create_steps(self, steps_id):
@@ -169,10 +191,12 @@ class InformationsProcessor:
         for k, v in steps.items():
             if 'submit' not in v['actions']:
                 Lesson.objects.with_id(v['lesson']).update(pull__steps=k)
+                steps_id.remove(k)
             else:
                 v.pop('actions')
                 # добавляем в базу
                 Step(**v).save()
+        return steps_id
 
     def create_progress(self):
         for st in self.students:
@@ -218,6 +242,36 @@ class InformationsProcessor:
 
                 Student.add_progress(student=st, course=c, progress=pr_c / count_c)
 
+        for sp in Step.objects.all():
+            sp.update(count_passed=Grade.objects.filter(student__in =self.students, step=sp.id, is_passed=True).count())
+
+    def get_correct_wrong_sol_date(self, solutions):
+
+        """
+        Получает дату правильного и неправильного решений
+        :param list_solutios:
+        :return:
+        """
+        correct_date = None
+        wrong_date = None
+        if solutions:
+            if solutions[0]['status'] == 'wrong':
+                wrong_date = solutions[0]['time']
+
+                try:
+                    correct_date = next(filter(lambda x: x['status'] == 'correct', solutions))['time']
+                except:
+                    pass
+            else:
+                correct_date = solutions[0]['time']
+
+                try:
+                    wrong_date = next(filter(lambda x: x['status'] == 'wrong', solutions))['time']
+                except:
+                    pass
+        return correct_date, wrong_date
+
+
     def get_progress_table(self):
         # создаем список курсов и студентов
         C = Course.objects.exclude('sections').filter(id__in=self.courses)
@@ -232,25 +286,31 @@ class InformationsProcessor:
         return st, co, Section, Lesson, Step, Grade
 
     def get_course_page(self, course_id):
-        print(Course.objects.only('title').with_id(course_id).title)
-        for s in Section.objects.filter(course=course_id):
-            print(s.title)
-            for l in Lesson.objects.filter(section=s.id):
-                print(l.title)
-                for sp in l.steps:
-                    # название факт прохождения корректно некорректно
-                    print(Step.objects.only('position').with_id(sp).position,end='\t')
-                print('')
-                for st in self.students:
-                    print(Student.objects.with_id(st).name_google,end='\t')
-                    for s in l.steps:
-                        print(Grade.objects.filter(student=st, step=sp).first().is_passed,end='\t')
-                    print('')
+        st = Student.objects.filter(id__in=self.students).all()
+        co = Course.objects.with_id(course_id)
+        print(st)
+        print(co)
+        # print(Course.objects.only('title').with_id(course_id).title)
+        # for s in Section.objects.filter(course=course_id):
+        #     print(s.title)
+        #     for l in Lesson.objects.filter(section=s.id):
+        #         print(l.title)
+        #         for sp in Step.objects.filter(id__in=l.steps):
+        #             # название факт прохождения корректно некорректно
+        #             print(sp.position,end='')
+        #             print('(',sp.count_passed, ')', end='\t')
+        #         print('')
+        #         for st in self.students:
+        #             print(Student.objects.with_id(st).name_google,end='\t')
+        #             for sp in l.steps:
+        #                 print(Grade.objects.filter(student=st, step=sp).first().is_passed,end='\t')
+        #             print('')
+        return st,co,Section, Lesson, Step, Grade
 
 if __name__ == "__main__":
     a = InformationsProcessor()
-    # a.stepic_api.load_token()
-    # a.main_1()
-    a.students = [59934516, 19671119, 19618699, 19679512, 19618655, 2686236]
-    a.courses = [37059]
-    a.get_course_page(37059)
+    a.stepic_api.load_token()
+    a.main_1()
+    # a.students = [59934516, 19671119, 19618699, 19679512, 19618655, 2686236]
+    # a.courses = [37059]
+    # a.get_course_page(37059)

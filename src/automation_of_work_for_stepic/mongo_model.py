@@ -43,6 +43,7 @@ class Step(Document):
     id = IntField(required=True, primary_key=True)
     lesson = IntField(required=True)
     position = IntField(required=True)
+    count_passed=IntField(default=0)
 
 
 class Lesson(Document):

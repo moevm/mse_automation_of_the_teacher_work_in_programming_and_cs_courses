@@ -42,7 +42,8 @@ def student_page(id: int):
 @login_required
 def course_page(id: int):
     if id in get_info.courses:
-
-        return render_template('page/course.html', info=info, names=a, steps=b, progress=c[0])
+        students, course, Section, Lesson, Step, Grade = get_info.get_course_page(id)
+        return render_template('page/course.html', students=students, course=course, Section=Section, Lesson=Lesson,
+                               Step=Step, Grade=Grade)
     else:
         return render_template('error/404.html')
