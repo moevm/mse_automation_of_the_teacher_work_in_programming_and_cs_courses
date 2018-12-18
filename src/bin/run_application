@@ -1,8 +1,19 @@
 import argparse
 import os
+import logging
 #os.chdir(os.path.join('C:\\', 'Users', 'nosov', 'PycharmProjects', 'autocheck_stepic', 'src'))
 
 file_needs_for_app = ['stepic_client.json', 'private key for GoogleAPI.json', 'config.json']
+
+LOG_FORMAT = "%(asctime)s - %(levelname)s - %(funcName)s - %(message)s"
+DEFAULT_LOG_LEVEL = "ERROR"
+LEVELS = {'debug': logging.DEBUG,
+          'info': logging.INFO,
+          'warning': logging.WARNING,
+          'error': logging.ERROR,
+          'critical': logging.CRITICAL
+         }
+
 
 def correct_path(path: str):
     if os.path.isdir(path) and all([os.path.isfile(os.path.join(path, file)) for file in file_needs_for_app]):
@@ -16,22 +27,50 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Run application for automation of work for stepic.',
         epilog='')
+    parser.add_argument(
+    'directory',
+    type=correct_path,
+    )
 
     parser.add_argument(
-        'directory',
-        help=f'the path to the resources folder (with \n {[i for i in file_needs_for_app]}',
-        type=correct_path)
+        '-p',
+        '--port',
+        type=int,
+        default = '5000',
+        required = True
+        )
 
+    parser.add_argument(
+        '-a',
+        '--host',
+        type=str,
+        default = '127.0.0.1'
+        )
+    parser.add_argument(
+        '-l',
+        '--log_level',
+        dest='log_level',
+        choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
+        default='ERROR',
+        help='Sets the log level to DEBUG, INFO, WARNING, ERROR, and CRITICAL')
+    parser.add_argument(
+        '-f',
+        '--log_file',
+        dest='log_file',
+        )
     args = parser.parse_args()
     dir=args.directory
-
+    if args.log_file:
+        logging.basicConfig(filename=(args.log_file), level=(args.log_level), filemode='w', format=LOG_FORMAT)
+    else :
+        logging.basicConfig(level=(args.log_level), filemode='w', format=LOG_FORMAT)
+    logging.info('Starting...')
     from automation_of_work_for_stepic.stepic_api import StepicAPI
     from automation_of_work_for_stepic.configuration import Configuration
-    from automation_of_work_for_stepic.google_table import GoogleTable
-
+    from automation_of_work_for_stepic.google.google_table import GoogleTable
     StepicAPI(os.path.join(dir,file_needs_for_app[0]))
     Configuration(os.path.join(dir,file_needs_for_app[2]))
     GoogleTable(os.path.join(dir,file_needs_for_app[1]))
 
     from automation_of_work_for_stepic.app import create_app
-    create_app().run()
+    create_app().run(host = args.host, port = args.port)
