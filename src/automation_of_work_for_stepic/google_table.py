@@ -19,7 +19,8 @@ class GoogleTable:
         :param key_path: путь к токену для работы с google_api
         """
         if os.path.exists(key_path):
-            self.gc = gspread.authorize(ServiceAccountCredentials.from_json_keyfile_name(key_path, ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']))
+            self.gc = gspread.authorize(ServiceAccountCredentials.from_json_keyfile_name(key_path, [
+                'https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']))
             self.Table = None
         else:
             print("Указанного пути к токену google_api не существует")
@@ -40,6 +41,7 @@ class GoogleTable:
                 self.set_sheet(sheet)
             except gspread.exceptions.APIError:
                 self.Table = None
+                self.Sheet = None
                 print("Ошибка google_api, проверьте правильность ссылки на таблицу")
 
     def set_sheet(self, sheet):
@@ -53,17 +55,18 @@ class GoogleTable:
             return
 
         if type(sheet) is int:
-            self.Sheet = self.Table.get_worksheet(sheet)    # если лист таблицы задан номером
+            self.Sheet = self.Table.get_worksheet(sheet)  # если лист таблицы задан номером
             if not self.Sheet:
                 print(f"Несуществующий лист таблицы №{sheet}")
         elif type(sheet) is str:
             try:
-                self.Sheet = self.Table.worksheet(sheet)    # если лист таблицы задан именем
+                self.Sheet = self.Table.worksheet(sheet)  # если лист таблицы задан именем
             except gspread.exceptions.WorksheetNotFound:
                 self.Sheet = None
                 print(f"Несуществующий лист таблицы с именем '{sheet}'")
         else:
             print(f"Неверный формат sheet: {sheet}")
+            self.Sheet = None
 
     def get_column(self, col):
         """
@@ -74,12 +77,13 @@ class GoogleTable:
         if self.Sheet:
             if type(col) is int:
                 try:
-                    return self.Sheet.col_values(col)   # получение столбца, заданного номером
+                    return self.Sheet.col_values(col)  # получение столбца, заданного номером
                 except gspread.exceptions.IncorrectCellLabel:
                     print(f"Некорректный номер столбца: {col}")
             elif type(col) is str:
                 try:
-                    return self.Sheet.col_values(gspread.utils.a1_to_rowcol(col + "1")[1])  # получение столбца, заданного буквой
+                    return self.Sheet.col_values(
+                        gspread.utils.a1_to_rowcol(col + "1")[1])  # получение столбца, заданного буквой
                 except gspread.exceptions.APIError:
                     print(f"Ошибка GoogleAPI, проверьте правильность имени столбца: '{col}'")
                 except gspread.exceptions.IncorrectCellLabel:
@@ -107,7 +111,7 @@ class GoogleTable:
         if self.Sheet:
             all_rows = self.get_column(col)
             if all_rows:
-                return all_rows[row_from-1:row_to-1]
+                return all_rows[row_from - 1:row_to - 1]
 
 
 if __name__ == "__main__":

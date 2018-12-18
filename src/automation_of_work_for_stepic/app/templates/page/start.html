@@ -2,7 +2,28 @@
 
 {% block content %}
 {% if g.user %}
-    <a href="{{ url_for('page.index') }}">Перейти к сводной таблице</a>
+    <a href="{{ url_for('page.index') }}">Перейти к сводной таблице</a><br>
+    Конфигурационные данные:<br>
+    URL: <a href="{{config._Data['google_table']['URL']}}">Google Table</a><br>
+    Лист: {{config._Data['google_table']['Sheet']}}<br>
+    Колонка ФИО: {{config._Data['google_table']['FIO_Col']}}<br>
+    Строки ФИО:
+    {%- for row in config._Data['google_table']['FIO_Rows'] %}
+        {{row  }}
+    {%- endfor %}
+    <br>
+    Колонка ID: {{config._Data['google_table']['ID_Col']}}<br>
+    Строки ID:
+    {%- for row in config._Data['google_table']['ID_Rows'] %}
+        {{row  }}
+    {%- endfor %}
+    <br>
+    Stepic:<br>
+    Курсы:
+    {%- for course in config._Data['stepic']['id_course'] %}
+        {{course }}
+    {%- endfor %}
+
 {% else %}
     Чтобы перейти к сводной таблице необходимо <a href="{{ url_for('auth.login_stepic') }}">авторизоваться</a>
 {% endif %}

@@ -23,7 +23,7 @@
 ID: {{info['id']}} <br>
 Название : {{info['title']}} <br>
 
-<a href="1" class="hideLink" onclick="showHide({{info['id']}});return false;">Стурктура курса</a><a id="{{info['id']}}-show"></a>
+<a href="1" class="hideLink" onclick="showHide({{info['id']}});return false;">Структура курса</a><a id="{{info['id']}}-show"></a>
 <ul id={{info['id']}} class="more">
     {%- for section in info['sections'] %}
     <li>
@@ -33,9 +33,30 @@ ID: {{info['id']}} <br>
             <li>
                  <a href="1" class="hideLink" onclick="showHide({{lesson['id']}});return false;">{{lesson['title']}}</a><a id="{{lesson['id']}}-show"></a>
                 <ul id={{lesson['id']}} class="more">
-                    {%- for step in lesson['steps'] %}
-                    <li>{{step}}</li>
-                    {%- endfor %}
+                    <table class="blueTable">
+                    <thead>
+                    <tr>
+                        <th>Имя</th>
+                        {%- for step in lesson['steps'] %}
+                            <th>{{step}}</th>
+                        {%- endfor %}
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for n in names %}
+                    <tr>
+                        <td><a href="{{ url_for('page.student_page',id=n['id']) }}"> {{n['name_google']}} </a></td>
+                        {% for step in lesson['steps'] %}
+                            {% if progress[n['id']]['steps'][step] %}
+                                <th>1</th>
+                            {% else %}
+                                <th>0</th>
+                            {% endif %}
+                        {%- endfor %}
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                    </table>
                 </ul>
                 <br>
             </li>
