@@ -15,7 +15,6 @@
       ]
   }
   "stepic": {
-    "id_course": 64
-    "smth_info": "information"
+    "id_course": [64]
   }
 }
