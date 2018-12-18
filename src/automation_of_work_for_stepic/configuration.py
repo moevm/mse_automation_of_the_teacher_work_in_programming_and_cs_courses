@@ -1,8 +1,7 @@
 import json
 import os
-
+import logging
 from automation_of_work_for_stepic.utility import singleton
-
 
 @singleton
 class Configuration:
@@ -18,11 +17,11 @@ class Configuration:
                 try:
                     data = json.load(fh)
                 except json.decoder.JSONDecodeError:
-                    print("Ошибка в конфигурационном файле")
+                    logging.error("Ошибка в конфигурационном файле")
                 else:
                     self._Data = data
         else:
-            print("Указанного пути не существует")
+            logging.error("Указанного пути не существует")
 
     def get_data(self):
         """
@@ -55,9 +54,9 @@ class Configuration:
             if key in self._Data:
                 return self._Data[key]
             else:
-                print(f"Ключ недействителен: '{key}'")
+                logging.error(f"Ключ недействителен: '{key}'")
         else:
-            print("Конфигурационные данные отсутствуют")
+            logging.error("Конфигурационные данные отсутствуют")
 
 
 if __name__ == "__main__":
