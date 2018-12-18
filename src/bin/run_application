@@ -37,7 +37,6 @@ if __name__ == '__main__':
         '--port',
         type=int,
         default = '5000',
-        required = True
         )
 
     parser.add_argument(
