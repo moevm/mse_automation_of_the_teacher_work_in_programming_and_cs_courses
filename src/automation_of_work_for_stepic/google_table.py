@@ -3,6 +3,7 @@ import os
 from oauth2client.service_account import ServiceAccountCredentials
 import gspread.exceptions
 
+
 from automation_of_work_for_stepic import configuration as conf
 from automation_of_work_for_stepic.utility import singleton
 import logging
