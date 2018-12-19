@@ -6,6 +6,7 @@ import gspread.utils
 
 from automation_of_work_for_stepic import configuration as conf
 from automation_of_work_for_stepic.utility import singleton
+import logging
 
 
 @singleton
@@ -19,11 +20,10 @@ class GoogleTable:
         :param key_path: путь к токену для работы с google_api
         """
         if os.path.exists(key_path):
-            self.gc = gspread.authorize(ServiceAccountCredentials.from_json_keyfile_name(key_path, [
-                'https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']))
+            self.gc = gspread.authorize(ServiceAccountCredentials.from_json_keyfile_name(key_path, ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']))
             self.Table = None
         else:
-            print("Указанного пути к токену google_api не существует")
+            logging.error("Указанного пути к токену google_api не существует")
 
     def set_table(self, url, sheet=0):
         """
@@ -35,14 +35,13 @@ class GoogleTable:
         try:
             self.Table = self.gc.open_by_url(url)
         except gspread.exceptions.NoValidUrlKeyFound:
-            print("Не найден корректный ключ таблицы в URL, проверьте правильность ссылки на таблицу")
+            logging.error("Не найден корректный ключ таблицы в URL, проверьте правильность ссылки на таблицу")
         else:
             try:
                 self.set_sheet(sheet)
             except gspread.exceptions.APIError:
                 self.Table = None
-                self.Sheet = None
-                print("Ошибка google_api, проверьте правильность ссылки на таблицу")
+                logging.error("Ошибка google_api, проверьте правильность ссылки на таблицу")
 
     def set_sheet(self, sheet):
         """
@@ -57,15 +56,15 @@ class GoogleTable:
         if type(sheet) is int:
             self.Sheet = self.Table.get_worksheet(sheet)  # если лист таблицы задан номером
             if not self.Sheet:
-                print(f"Несуществующий лист таблицы №{sheet}")
+                logging.warning(f"Несуществующий лист таблицы №{sheet}")
         elif type(sheet) is str:
             try:
                 self.Sheet = self.Table.worksheet(sheet)  # если лист таблицы задан именем
             except gspread.exceptions.WorksheetNotFound:
                 self.Sheet = None
-                print(f"Несуществующий лист таблицы с именем '{sheet}'")
+                logging.warning(f"Несуществующий лист таблицы с именем '{sheet}'")
         else:
-            print(f"Неверный формат sheet: {sheet}")
+            logging.warning(f"Неверный формат sheet: {sheet}")
             self.Sheet = None
 
     def get_column(self, col):
