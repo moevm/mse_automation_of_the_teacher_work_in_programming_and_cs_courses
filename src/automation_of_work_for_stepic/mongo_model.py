@@ -1,13 +1,12 @@
 from mongoengine import *
 
-from mongoengine import *
-
+## student
 
 class Student(Document):
     id = IntField(required=True, primary_key=True)
     name_stepic = StringField(max_length=50, required=True)
     name_google = StringField(max_length=50)
-    progress_courses = DictField( default={})
+    progress_courses = DictField(default={})
     progress_sections = DictField(default={})
     progress_lessons = DictField(default={})
 
@@ -39,18 +38,20 @@ class Student(Document):
             return queryset.filter(id=student).update_one(**{'progress_courses__date' + str(course): date})
 
 
+## course
+
 class Step(Document):
     id = IntField(required=True, primary_key=True)
     lesson = IntField(required=True)
     position = IntField(required=True)
-    count_passed=IntField(default=0)
+    count_passed = IntField(default=0)
 
 
 class Lesson(Document):
     id = IntField(required=True, primary_key=True)
     title = StringField(max_length=100, required=True)
     section = IntField(required=True)
-    steps = ListField(IntField(),required=True)
+    steps = ListField(IntField(), required=True)
 
 
 class Section(Document):
@@ -65,6 +66,8 @@ class Course(Document):
     title = StringField(max_length=100, required=True)
     sections = ListField(IntField(), required=True)
 
+
+## grade
 
 class Grade(Document):
     student = IntField(required=True)
@@ -91,10 +94,10 @@ class Grade(Document):
     @queryset_manager
     def first_correct_date(doc_cls, queryset, student=None, steps=None):
         if steps is not None and student is not None:
-            grade=queryset.filter(student=student, step__in=steps).order_by('-correct_date').first()
+            grade = queryset.filter(student=student, step__in=steps).order_by('-correct_date').first()
             return grade.correct_date if grade else None
         elif steps is not None:
-            grade=queryset.filter(step__in=steps).order_by('-correct_date').first()
+            grade = queryset.filter(step__in=steps).order_by('-correct_date').first()
             return grade.correct_date if grade else None
         elif student is not None:
             grade = queryset.filter(student=student).order_by('-correct_date').first()
@@ -104,12 +107,40 @@ class Grade(Document):
             return grade.correct_date if grade else None
 
 
-class Incorrect(Document):
-    unknown_student = IntField(required=True)
-    unknown_course = IntField(required=True)
-    no_permissions_course = ListField(IntField(), required=True)
+## incorrect
 
+class Incorrect(Document):
+    id = IntField(required=True, primary_key=True)
+    unknown_student = ListField(StringField(),default=[])
+    unknown_course = ListField(IntField(), default=[])
+    no_permission_course = ListField(IntField(), default=[])
+
+
+## user
 
 class User(Document):
     id = IntField(required=True, primary_key=True)
-    last_update = DateTimeField(required=True)
+    last_update = DateTimeField()
+
+
+## config
+
+class GTable(EmbeddedDocument):
+    URL = URLField(required=True)
+    Sheet = IntField(required=True)
+    FIO_Col = StringField(max_length=3)
+    FIO_Rows = ListField(IntField(), required=True)
+    ID_Col = StringField(max_length=3)
+    ID_Rows = ListField(IntField(), required=True)
+
+
+class Stepic(EmbeddedDocument):
+    id_course = ListField(IntField(), required=True)
+
+
+class Config(Document):
+    id = IntField(required=True, primary_key=True)
+    google_table = EmbeddedDocumentField(GTable)
+    stepic = EmbeddedDocumentField(Stepic)
+    students=ListField(IntField())
+    courses=ListField(IntField())
