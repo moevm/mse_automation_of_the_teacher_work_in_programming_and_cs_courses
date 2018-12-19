@@ -1,4 +1,4 @@
-src/.idea
+.idea
 src/instance
 src/resources/private key for GoogleAPI.json
 src/resources/stepic_client.json

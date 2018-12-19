@@ -2,7 +2,7 @@ import unittest
 import mock
 import warnings
 import os
-from src.automation_of_work_for_stepic import configuration as conf
+from automation_of_work_for_stepic import configuration as conf
 
 
 class TestInitConfiguration(unittest.TestCase):
@@ -24,8 +24,9 @@ class TestInitConfiguration(unittest.TestCase):
         Позитивный тест
         Корректное значение данных конфигурации
         """
-        config = conf.Configuration(os.path.join("tests", "resources", "config.json"))
-        correct_data_config = {'google_table': {'URL': 'https://docs.google.com/spreadsheets/d/1t1szRuyb023sfuXLf6p-fDLmMcNtAmKfK0enj4URTxU', 'Sheet': 0, 'FIO_Col': 1, 'FIO_Rows': [11, 21], 'ID_Col': 5, 'ID_Rows': [11, 21]}, 'stepic': {'id_course': 64, 'smth_info': 'information'}}
+        config = conf.Configuration()
+        conf.Configuration.__init__(config, os.path.join("tests", "resources", "config.json"))
+        correct_data_config = {'google_table': {'URL': 'https://docs.google.com/spreadsheets/d/1t1szRuyb023sfuXLf6p-fDLmMcNtAmKfK0enj4URTxU', 'Sheet': 0, 'FIO_Col': 1, 'FIO_Rows': [11, 21], 'ID_Col': 5, 'ID_Rows': [11, 21]}, 'stepic': {'id_course': [64]}}
         self.assertEqual(config.get_data(), correct_data_config)
 
     @ignore_warnings
@@ -35,9 +36,9 @@ class TestInitConfiguration(unittest.TestCase):
         Негативный тест
         Проверяет исключение, если пользователь указал не верный путь к конфигурационному файлу
         """
-        conf.Configuration(os.path.join("resources", "wrong_path.json"))
-        conf.Configuration(os.path.join("config.json"))
-        conf.Configuration(os.path.join("windows", "config.json"))
+        conf.Configuration.__init__(conf.Configuration(),os.path.join("resources", "wrong_path.json"))
+        conf.Configuration.__init__(conf.Configuration(), os.path.join("config.json"))
+        conf.Configuration.__init__(conf.Configuration(), os.path.join("windows", "config.json"))
         mock_stdout.write.assert_has_calls([
             mock.call("Указанного пути не существует"),
             mock.call('\n'),
@@ -54,10 +55,10 @@ class TestInitConfiguration(unittest.TestCase):
         Негативный тест
         Проверяет исключение, если конфигурационный файл содержит ошибку json
         """
-        conf.Configuration(os.path.join("tests", "resources", "empty_file.json"))
-        conf.Configuration(os.path.join("tests", "resources", "config_decode_error_1.json"))
-        conf.Configuration(os.path.join("tests", "resources", "config_decode_error_2.json"))
-        conf.Configuration(os.path.join("tests", "resources", "config_decode_error_3.json"))
+        conf.Configuration.__init__(conf.Configuration(),os.path.join("tests", "resources", "empty_file.json"))
+        conf.Configuration.__init__(conf.Configuration(),os.path.join("tests", "resources", "config_decode_error_1.json"))
+        conf.Configuration.__init__(conf.Configuration(),os.path.join("tests", "resources", "config_decode_error_2.json"))
+        conf.Configuration.__init__(conf.Configuration(),os.path.join("tests", "resources", "config_decode_error_3.json"))
         mock_stdout.write.assert_has_calls([
             mock.call("Ошибка в конфигурационном файле"),
             mock.call('\n'),
@@ -89,9 +90,10 @@ class TestGetConfig(unittest.TestCase):
         Позитивный тест
         Корректное значение конфигурации по ключу
         """
-        config = conf.Configuration(os.path.join("tests", "resources", "config.json"))
+        config = conf.Configuration()
+        conf.Configuration.__init__(config, os.path.join("tests", "resources", "config.json"))
         correct_google = {'URL': 'https://docs.google.com/spreadsheets/d/1t1szRuyb023sfuXLf6p-fDLmMcNtAmKfK0enj4URTxU', 'Sheet': 0, 'FIO_Col': 1, 'FIO_Rows': [11, 21], 'ID_Col': 5, 'ID_Rows': [11, 21]}
-        correct_stepic = {'id_course': 64, 'smth_info': 'information'}
+        correct_stepic = {'id_course': [64]}
         self.assertEqual(config.get_google_table_config(), correct_google)
         self.assertEqual(config.get_config_by_key('google_table'), correct_google)
         self.assertEqual(config.get_stepic_config(), correct_stepic)
@@ -104,7 +106,8 @@ class TestGetConfig(unittest.TestCase):
         Негативный тест
         Проверяет исключение, если конфигурационные данные пусты
         """
-        config = conf.Configuration(os.path.join("tests", "resources", "config_empty.json"))
+        config = conf.Configuration()
+        conf.Configuration.__init__(config, os.path.join("tests", "resources", "config_empty.json"))
         config.get_google_table_config()
         config.get_stepic_config()
         config.get_config_by_key('stepic')
@@ -127,7 +130,8 @@ class TestGetConfig(unittest.TestCase):
         Негативный тест
         Проверяет исключение, если запрашиваются данные по недействительному ключу
         """
-        config = conf.Configuration(os.path.join("tests", "resources", "config.json"))
+        config = conf.Configuration()
+        conf.Configuration.__init__(config, os.path.join("tests", "resources", "config.json"))
         config.get_config_by_key('key')
         config.get_config_by_key('ctepic')
         config.get_config_by_key('googleTable')
