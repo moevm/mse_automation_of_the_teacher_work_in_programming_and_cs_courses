@@ -1,7 +1,17 @@
 import unittest
 import warnings
 import mock
-from src.automation_of_work_for_stepic.google import google_table as g_table
+
+import automation_of_work_for_stepic.google_table as g_table
+
+
+def ignore_warnings(test_func):
+    def do_test(self, *args, **kwargs):
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", ResourceWarning)
+            test_func(self, *args, **kwargs)
+
+    return do_test
 
 
 class TestInitGoogleTable(unittest.TestCase):
@@ -9,22 +19,15 @@ class TestInitGoogleTable(unittest.TestCase):
     Класс, тестирующий __init__ GoogleTable
     """
 
-    def ignore_warnings(test_func):
-        def do_test(self, *args, **kwargs):
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore", ResourceWarning)
-                test_func(self, *args, **kwargs)
-
-        return do_test
-
     @ignore_warnings
     def test_init_positive(self):
         """
         Позитивный тест
         Корректное создание объекта GoogleTable
         """
-        table = g_table.GoogleTable('https://docs.google.com/spreadsheets/d/1t1szRuyb023sfuXLf6p-fDLmMcNtAmKfK0enj4URTxU')
-        self.assertEqual(type(table), g_table.GoogleTable)
+        table = g_table.GoogleTable()
+        table.set_table('https://docs.google.com/spreadsheets/d/1t1szRuyb023sfuXLf6p-fDLmMcNtAmKfK0enj4URTxU')
+        self.assertEqual(type(table), g_table.GoogleTable().__class__)
         self.assertNotEqual(table.Table, None)
         self.assertNotEqual(table.Sheet, None)
 
@@ -36,15 +39,16 @@ class TestInitGoogleTable(unittest.TestCase):
         Негативный тест
         Проверяет исключение, если ссылка не имеет ключа гугл-таблицы
         """
-        t1 = g_table.GoogleTable('https://vk.com')
-        t2 = g_table.GoogleTable('https://yandex.ru')
-        t3 = g_table.GoogleTable('https://docs.google.com/spreadsheets/d/')
-        self.assertEqual(t1.Table, None)
-        self.assertEqual(t1.Sheet, None)
-        self.assertEqual(t2.Table, None)
-        self.assertEqual(t2.Sheet, None)
-        self.assertEqual(t3.Table, None)
-        self.assertEqual(t3.Sheet, None)
+        table = g_table.GoogleTable()
+        table.set_table('https://vk.com')
+        self.assertEqual(table.Table, None)
+        self.assertEqual(table.Sheet, None)
+        table.set_table('https://yandex.ru')
+        self.assertEqual(table.Table, None)
+        self.assertEqual(table.Sheet, None)
+        table.set_table('https://docs.google.com/spreadsheets/d/')
+        self.assertEqual(table.Table, None)
+        self.assertEqual(table.Sheet, None)
 
         mock_stdout.write.assert_has_calls([
             mock.call("Не найден корректный ключ таблицы в URL, проверьте правильность ссылки на таблицу"),
@@ -62,15 +66,16 @@ class TestInitGoogleTable(unittest.TestCase):
         Негативный тест
         Проверяет исключение, если ссылка имеет не корректный ключ гугл-таблицы
         """
-        t1 = g_table.GoogleTable('https://docs.google.com/spreadsheets/d/it_is_wrong_key', 0)
-        t2 = g_table.GoogleTable('https://docs.google.com/spreadsheets/d/16I1mG_kMug_test_Bpnh_K23V_GTOWuN5hAEQG6OfOhIOlprA', 1)
-        t3 = g_table.GoogleTable('https://docs.google.com/spreadsheets/d/must_be_valid_url', 2)
-        self.assertEqual(t1.Table, None)
-        self.assertEqual(t1.Sheet, None)
-        self.assertEqual(t2.Table, None)
-        self.assertEqual(t2.Sheet, None)
-        self.assertEqual(t3.Table, None)
-        self.assertEqual(t3.Sheet, None)
+        table = g_table.GoogleTable()
+        table.set_table('https://docs.google.com/spreadsheets/d/it_is_wrong_key')
+        self.assertEqual(table.Table, None)
+        self.assertEqual(table.Sheet, None)
+        table.set_table('https://docs.google.com/spreadsheets/d/16I1mG_kMug_test_Bpnh_K23V_GTOWuN5hAEQG6OfOhIOlprA')
+        self.assertEqual(table.Table, None)
+        self.assertEqual(table.Sheet, None)
+        table.set_table('https://docs.google.com/spreadsheets/d/must_be_valid_url')
+        self.assertEqual(table.Table, None)
+        self.assertEqual(table.Sheet, None)
 
         mock_stdout.write.assert_has_calls([
             mock.call("Ошибка google_api, проверьте правильность ссылки на таблицу"),
@@ -87,21 +92,15 @@ class TestSetSheet(unittest.TestCase):
     Класс, тестирующий метод GoogleTable.set_sheet()
     """
 
-    def ignore_warnings(test_func):
-        def do_test(self, *args, **kwargs):
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore", ResourceWarning)
-                test_func(self, *args, **kwargs)
-
-        return do_test
-
     @ignore_warnings
     def test_set_sheet(self):
         """
         Позитивный тест
         Корректное установка листа таблицы
         """
-        table = g_table.GoogleTable('https://docs.google.com/spreadsheets/d/1t1szRuyb023sfuXLf6p-fDLmMcNtAmKfK0enj4URTxU')
+        table = g_table.GoogleTable()
+        table.set_table('https://docs.google.com/spreadsheets/d/1t1szRuyb023sfuXLf6p-fDLmMcNtAmKfK0enj4URTxU')
+        table.set_sheet("Лист №1")
         self.assertEqual(table.Sheet.title, "Лист №1")
         table.set_sheet(1)
         self.assertEqual(table.Sheet.title, "Лист2")
@@ -115,7 +114,9 @@ class TestSetSheet(unittest.TestCase):
         Негативный тест
         Проверяет исключение, если указанного для установки листа не существует
         """
-        table = g_table.GoogleTable('https://docs.google.com/spreadsheets/d/1t1szRuyb023sfuXLf6p-fDLmMcNtAmKfK0enj4URTxU', "First List")
+        table = g_table.GoogleTable()
+        table.set_table('https://docs.google.com/spreadsheets/d/1t1szRuyb023sfuXLf6p-fDLmMcNtAmKfK0enj4URTxU')
+        table.set_sheet("First List")
         self.assertEqual(table.Sheet, None)
         table.set_sheet("Wrong name")
         self.assertEqual(table.Sheet, None)
@@ -142,7 +143,9 @@ class TestSetSheet(unittest.TestCase):
         Негативный тест
         Проверяет исключение, если подан аргумент неверного типа
         """
-        table = g_table.GoogleTable('https://docs.google.com/spreadsheets/d/1t1szRuyb023sfuXLf6p-fDLmMcNtAmKfK0enj4URTxU', 1.5)
+        table = g_table.GoogleTable()
+        table.set_table('https://docs.google.com/spreadsheets/d/1t1szRuyb023sfuXLf6p-fDLmMcNtAmKfK0enj4URTxU')
+        table.set_sheet(1.5)
         self.assertEqual(table.Sheet, None)
         table.set_sheet(None)
         self.assertEqual(table.Sheet, None)
@@ -186,7 +189,8 @@ class TestGet(unittest.TestCase):
         Позитивный тест
         Корректное получение данных из таблицы
         """
-        table = g_table.GoogleTable('https://docs.google.com/spreadsheets/d/1t1szRuyb023sfuXLf6p-fDLmMcNtAmKfK0enj4URTxU')
+        table = g_table.GoogleTable()
+        table.set_table('https://docs.google.com/spreadsheets/d/1t1szRuyb023sfuXLf6p-fDLmMcNtAmKfK0enj4URTxU')
         self.assertEqual(table.get_row(1), ['ФИО', 'ID'])
         self.assertEqual(table.get_list(1, 2, 11), ['Азаревич Артём', 'Афийчук И.И.', 'Гомонова Анастасия ', 'Григорьев И.С.', 'Иванов В.С.', 'Кухарев М.А.', 'Лавренкова Екатерина', 'Мейзер Д.В.', 'Михайлов Ю.А.'])
 
@@ -197,7 +201,9 @@ class TestGet(unittest.TestCase):
         Негативный тест
         Проверяет исключение, если вызывается get* при Sheet == None
         """
-        table = g_table.GoogleTable('https://docs.google.com/spreadsheets/d/1t1szRuyb023sfuXLf6p-fDLmMcNtAmKfK0enj4URTxU', "Non-existent sheet")
+        table = g_table.GoogleTable()
+        g_table.GoogleTable.__init__(table, 'https://docs.google.com/spreadsheets/d/1t1szRuyb023sfuXLf6p-fDLmMcNtAmKfK0enj4URTxU')
+        table.set_sheet("Non-existent sheet")
         self.assertEqual(table.get_column(1), None)
         self.assertEqual(table.get_row(1), None)
         self.assertEqual(table.get_list(1, 1, 10), None)

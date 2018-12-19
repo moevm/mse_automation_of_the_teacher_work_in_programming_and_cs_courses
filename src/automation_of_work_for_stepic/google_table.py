@@ -2,7 +2,7 @@ import os
 
 from oauth2client.service_account import ServiceAccountCredentials
 import gspread.exceptions
-
+import gspread.utils
 
 from automation_of_work_for_stepic import configuration as conf
 from automation_of_work_for_stepic.utility import singleton
@@ -14,19 +14,18 @@ class GoogleTable:
     Table = None
     Sheet = None
 
-    def __init__(self, key_path=os.path.join("private key for GoogleAPI.json")):
+    def __init__(self, key_path=os.path.join("resources", "private key for GoogleAPI.json")):
         """
-        :param url: string - ссылка на таблицу
-        :param sheet: int/string - номер/название листа таблицы
+
         :param key_path: путь к токену для работы с google_api
         """
         if os.path.exists(key_path):
             self.gc = gspread.authorize(ServiceAccountCredentials.from_json_keyfile_name(key_path, ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']))
-            self.Table=None
+            self.Table = None
         else:
             logging.error("Указанного пути к токену google_api не существует")
 
-    def set_table(self,url, sheet=0):
+    def set_table(self, url, sheet=0):
         """
         Установка параметров таблицы
         :param url: string - ссылка на таблицу
@@ -55,26 +54,41 @@ class GoogleTable:
             return
 
         if type(sheet) is int:
-            self.Sheet = self.Table.get_worksheet(sheet)
+            self.Sheet = self.Table.get_worksheet(sheet)  # если лист таблицы задан номером
             if not self.Sheet:
                 logging.warning(f"Несуществующий лист таблицы №{sheet}")
         elif type(sheet) is str:
             try:
-                self.Sheet = self.Table.worksheet(sheet)
+                self.Sheet = self.Table.worksheet(sheet)  # если лист таблицы задан именем
             except gspread.exceptions.WorksheetNotFound:
                 self.Sheet = None
                 logging.warning(f"Несуществующий лист таблицы с именем '{sheet}'")
         else:
             logging.warning(f"Неверный формат sheet: {sheet}")
+            self.Sheet = None
 
-    def get_column(self, num):
+    def get_column(self, col):
         """
         Геттер столбца
-        :param num: int - номер требуемого столбца
+        :param col: int/str - номер/название требуемого столбца
         :return: [] - список значений всех ячеек столбца
         """
         if self.Sheet:
-            return self.Sheet.col_values(num)
+            if type(col) is int:
+                try:
+                    return self.Sheet.col_values(col)  # получение столбца, заданного номером
+                except gspread.exceptions.IncorrectCellLabel:
+                    print(f"Некорректный номер столбца: {col}")
+            elif type(col) is str:
+                try:
+                    return self.Sheet.col_values(
+                        gspread.utils.a1_to_rowcol(col + "1")[1])  # получение столбца, заданного буквой
+                except gspread.exceptions.APIError:
+                    print(f"Ошибка GoogleAPI, проверьте правильность имени столбца: '{col}'")
+                except gspread.exceptions.IncorrectCellLabel:
+                    print(f"Некорректное имя столбца: '{col}' (Проверьте раскладку клавиатуры)")
+            else:
+                print(f"Неверный формат col(столбца): {col}")
 
     def get_row(self, num):
         """
@@ -94,17 +108,19 @@ class GoogleTable:
         :return: [] - список значений ячеек требуемого диапазона строк из столбца
         """
         if self.Sheet:
-            return self.get_column(col)[row_from-1:row_to-1]
+            all_rows = self.get_column(col)
+            if all_rows:
+                return all_rows[row_from - 1:row_to - 1]
 
 
 if __name__ == "__main__":
-    'Создание(чтение) конфигурации'
+    # Создание(чтение) конфигурации
     config = conf.Configuration()
-    'Получение конфигурационных данных о гугл-таблице'
+    # Получение конфигурационных данных о гугл-таблице
     table_config = config.get_google_table_config()
-    'Открытие таблицы с помощью gspread согласно конфигурационным данным'
+    # Открытие таблицы с помощью gspread согласно конфигурационным данным
     a = GoogleTable()
     a.set_table(table_config['URL'], table_config['Sheet'])
-    'Получение списка из таблицы'
+    # Получение списка из таблицы
     print(a.get_list(table_config['FIO_Col'], table_config['FIO_Rows'][0], table_config['FIO_Rows'][1]))
     print(a.get_list(table_config['ID_Col'], table_config['ID_Rows'][0], table_config['ID_Rows'][1]))
