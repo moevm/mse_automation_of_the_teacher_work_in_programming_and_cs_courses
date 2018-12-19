@@ -3,24 +3,10 @@ from automation_of_work_for_stepic import configuration as conf
 from automation_of_work_for_stepic import stepic_api
 from automation_of_work_for_stepic.utility import singleton
 from automation_of_work_for_stepic.mongo_model import *
-from mongoengine import connect
-import itertools
+from mongoengine.connection import get_db
+
 import datetime
-import copy
-from datetime import datetime, date
-
-import cProfile
-
-def profile(func):
-    """Decorator for run function profile"""
-
-    def wrapper(*args, **kwargs):
-        profiler = cProfile.Profile()
-        result = profiler.runcall(func, *args, **kwargs)
-        profiler.print_stats()
-        return result
-
-    return wrapper
+from datetime import datetime
 
 @singleton
 class InformationsProcessor:
@@ -48,6 +34,12 @@ class InformationsProcessor:
         Скачивает информацию со степика
         :return:
         """
+        db = get_db()
+        for coll in db.list_collection_names():
+            db.drop_collection(coll)
+
+        self.user.save()
+
         course_id = []
         steps_id = {}
 

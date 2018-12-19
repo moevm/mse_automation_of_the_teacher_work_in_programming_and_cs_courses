@@ -42,7 +42,7 @@ ID: {{course.id}} <br>
                     <tr>
                         <th>Имя</th>
                         {%- for lesson in lessons%}
-                        {%- for step in Step.objects.filter(id__in=lesson.steps) %}
+                        {%- for step in Step.objects.filter(id__in=lesson.steps).order_by('position') %}
                         <th>Q{{step.position}}</th>
                         {%- endfor %}
                         {%- endfor %}
@@ -52,7 +52,7 @@ ID: {{course.id}} <br>
                     <tr>
                         <th>Сумма </th>
                         {%- for lesson in lessons %}
-                        {%- for step in Step.objects.filter(id__in=lesson.steps) %}
+                        {%- for step in Step.objects.filter(id__in=lesson.steps).order_by('position') %}
                         <th>{{step.count_passed}}</th>
                         {%- endfor %}
                         {%- endfor %}
