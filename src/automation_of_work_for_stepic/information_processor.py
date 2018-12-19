@@ -11,9 +11,6 @@ from datetime import datetime, date
 
 import cProfile
 
-connect('stepic', host='192.168.99.100', port=32770)
-
-
 def profile(func):
     """Decorator for run function profile"""
 

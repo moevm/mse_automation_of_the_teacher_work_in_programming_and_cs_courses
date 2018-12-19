@@ -127,7 +127,6 @@ class StepicAPI:
         :param path: путь куда токен созранитьмя
         :return:
         """
-        print(self.response_token)
         if path:
             with open(os.path.join(path, 'token.json'), 'w') as outfile:
                 json.dump(self.response_token, outfile)
