@@ -20,77 +20,64 @@
             }
 </script>
 
-ID: {{info['id']}} <br>
-Название : {{info['title']}} <br>
+ID: {{course.id}} <br>
+Название : {{course.title}} <br>
 
-<a href="1" class="hideLink" onclick="showHide({{info['id']}});return false;">Структура курса</a><a id="{{info['id']}}-show"></a>
-<ul id={{info['id']}} class="more">
-    {%- for section in info['sections'] %}
+<ul>
+    {%- for section in Section.objects.filter(course=course.id) %}
     <li>
-        <a href="1" class="hideLink" onclick="showHide({{section['id']}});return false;">{{section['title']}}</a><a id="{{section['id']}}-show"></a>
-        <ul id={{section['id']}} class="more">
-            {%- for lesson in section['lessons'] %}
-            <li>
-                 <a href="1" class="hideLink" onclick="showHide({{lesson['id']}});return false;">{{lesson['title']}}</a><a id="{{lesson['id']}}-show"></a>
-                <ul id={{lesson['id']}} class="more">
-                    <table class="blueTable">
+        <a href="1" class="hideLink" onclick="showHide({{section.id}});return false;">{{section.title}}</a><a id="{{section.id}}-show"></a>
+        <ul id={{section.id}} class="more">
+            <table class="redTable">
                     <thead>
+                    {% set lessons=Lesson.objects.filter(section=section.id) %}
+                    <tr>
+                        <th> </th>
+                        {%- for lesson in lessons %}
+                        <th colspan={{lesson.steps.__len__()}}>{{lesson.title}}</th>
+                        {%- endfor %}
+                    </tr>
+                    </thead>
+                <thead>
                     <tr>
                         <th>Имя</th>
-                        {%- for step in lesson['steps'] %}
-                            <th>{{step}}</th>
+                        {%- for lesson in lessons%}
+                        {%- for step in Step.objects.filter(id__in=lesson.steps) %}
+                        <th>Q{{step.position}}</th>
+                        {%- endfor %}
                         {%- endfor %}
                     </tr>
                     </thead>
                     <tbody>
-                    {% for n in names %}
                     <tr>
-                        <td><a href="{{ url_for('page.student_page',id=n['id']) }}"> {{n['name_google']}} </a></td>
-                        {% for step in lesson['steps'] %}
-                            {% if progress[n['id']]['steps'][step] %}
-                                <th>1</th>
-                            {% else %}
-                                <th>0</th>
-                            {% endif %}
+                        <th>Сумма </th>
+                        {%- for lesson in lessons %}
+                        {%- for step in Step.objects.filter(id__in=lesson.steps) %}
+                        <th>{{step.count_passed}}</th>
+                        {%- endfor %}
                         {%- endfor %}
                     </tr>
-                    {% endfor %}
+                    {%- for student in students %}
+                    <tr>
+                        <td><a href="{{ url_for('page.student_page',id=student.id) }}"> {{student.name_google}} </a></td>
+                        {%- for lesson in lessons %}
+                        {%- for step in lesson.steps %}
+                            {% if Grade.objects.filter(student=student.id, step=step).first().is_passed %}
+                            <td>1</td>
+                            {% else %}
+                            <td>0</td>
+                            {% endif %}
+                        {%- endfor %}
+                        {%- endfor %}
+                    </tr>
+                    {%- endfor %}
                     </tbody>
                     </table>
-                </ul>
-                <br>
-            </li>
-            {%- endfor %}
+
         </ul>
         <br>
     </li>
     {%- endfor %}
 </ul>
-<br>
-<br>
-Прохождение шагов студентами
-<table class="blueTable">
-<thead>
-<tr>
-    <th>Name</th>
-    {%- for step in steps %}
-    <th>{{step}}</a></th>
-    {%- endfor %}
-</tr>
-</thead>
-<tbody>
-{% for n in names %}
-<tr>
-    <td><a href="{{ url_for('page.student_page',id=n['id']) }}"> {{n['name_google']}} </a></td>
-        {% for step in steps %}
-        {% if progress[n['id']]['steps'][step] %}
-        <td>1</td>
-        {% else %}
-        <td>0</td>
-        {% endif %}
-    {%- endfor %}
-</tr>
-{% endfor %}
-</tbody>
-</table>
+
 {% endblock %}

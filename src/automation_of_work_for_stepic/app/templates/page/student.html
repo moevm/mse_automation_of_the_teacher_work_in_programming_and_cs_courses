@@ -20,54 +20,76 @@
             }
 </script>
 
-ID  студента: {{info['id']}} <br>
-Имя студента в гугл таблице : {{info['name_google']}} <br>
-Имя студента в степике: {{info['name_stepic']}} <br>
+ID  студента: {{student.id}} <br>
+Имя студента с гугл таблице : {{student.name_google}} <br>
+Имя студента в степике: {{student.name_stepic}} <br>
 Курсы <br>
 
 <ul>
-    {%- for course in info['courses'] %}
+    {%- for course in courses %}
 	<li>
-        <a href="1" class="hideLink" onclick="showHide({{course['id']}});return false;">{{course['title']}}</a><a id="{{course['id']}}-show"></a>
-		<ul id={{course['id']}} class="more">
-            Прогресс: {{course['progress']}} <br>
-            <br>
-            {%- for section in course['sections'] %}
+        <a href="1" class="hideLink" onclick="showHide({{course.id}});return false;">{{course.title}}</a><a id="{{course.id}}-show"></a>
+		<ul id={{course.id}} class="more">
+            Прогресс: {{student.progress_courses.get(course.id.__str__(),0.0).__round__(2)}} <br>
+            {% if student.progress_courses.get('date'+course.id.__str__()) %}
+                Дата: {{student.progress_courses.get('date'+course.id.__str__()).strftime("%d.%m.%y")}}<br>
+            {% endif %}
+                <br>
+            {%- for section in Section.objects.filter(course=course.id) %}
 			<li>
-                <a href="1" class="hideLink" onclick="showHide({{section['id']}});return false;">{{section['title']}}</a><a id="{{section['id']}}-show"></a>
-                <ul id={{section['id']}} class="more">
-                    Прогресс модуля: {{section['progress']}}
-                    <br>
-                    {% if section['is_passed'] %}
-                        Дата: {{section['date']}}<br>
+                <a href="1" class="hideLink" onclick="showHide({{section.id}});return false;">{{section.title}}</a><a id="{{section.id}}-show"></a>
+                <ul id={{section.id}} class="more">
+                    Прогресс: {{student.progress_sections.get(section.id.__str__(),0.0).__round__(2)}}<br>
+                    {% if student.progress_sections.get('date'+section.id.__str__()) %}
+                        Дата: {{student.progress_sections.get('date'+section.id.__str__()).strftime("%d.%m.%y")}}<br>
                     {% endif %}
-                    <br>
-                    {%- for lesson in section['lessons'] %}
+                        <br>
+                    {%- for lesson in Lesson.objects.filter(section=section.id)%}
 			        <li>
-                         <a href="1" class="hideLink" onclick="showHide({{lesson['id']}});return false;">{{lesson['title']}}</a><a id="{{lesson['id']}}-show"></a>
-                         <ul id={{lesson['id']}} class="more">
-                             <table class="blueTable">
-                                 <thead>
-                                 <tr>
-                                     <th>Степ</th>
-                                     <th>Решен</th>
-                                     <th>Дата верного решения</th>
-                                     <th>Дата неверного решения</th>
-                                 </tr>
-                                 </thead>
-                                 <tbody>
-                                    {% for step in lesson['steps']%}
-                                    <tr>
-                                         <th>{{step['id']}}</th>
-                                         <th>{{step['is_passed']}}</th>
-                                         <th>{{step['first_true']}}</th>
-                                         <th>{{step['first_false']}}</th>
-                                     </tr>
-                                     {%- endfor %}
-                                 </tbody>
-                             </table>
-		                 </ul>
-                         <br>
+                         <a href="1" class="hideLink" onclick="showHide({{lesson.id}});return false;">{{lesson.title}}</a><a id="{{lesson.id}}-show"></a>
+                        <ul id={{lesson.id}} class="more">
+                            Прогресс: {{student.progress_lessons.get(lesson.id.__str__()).__round__(2)}}<br>
+                            {% if student.progress_lessons.get('date'+lesson.id.__str__())%}
+                                Дата: {{student.progress_lessons.get('date'+lesson.id.__str__()).strftime("%d.%m.%y")}}<br>
+                            {% endif %}
+                            <br>
+
+                            <table class="redTable">
+                            <thead>
+
+                            <tr>
+                                <th> Степ </th>
+                                <th> Решен </th>
+                                <th> Дата правильного решения </th>
+                                <th> Дата неправильного решения </th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {%- for step in lesson.steps %}
+                            {% set grade = Grade.objects.filter(student=student.id, step=step).first() %}
+                            <tr>
+                                <td>Q{{Step.objects.with_id(step).position}}</td>
+                                {% if grade.is_passed %}
+                                    <td>1</td>
+                                    {% else %}
+                                    <td>0</td>
+                                {% endif %}
+                                {% if grade.is_passed %}
+                                <td>{{grade.correct_date.strftime("%d.%m.%y")}}</td>
+                                {% else %}
+                                <td> - </td>
+                                {% endif %}
+                                {% if grade.wrong_date %}
+                                <td>{{grade.wrong_date.strftime("%d.%m.%y")}}</td>
+                                {% else %}
+                                <td> - </td>
+                                {% endif %}
+                            </tr>
+                            {%- endfor %}
+                            </tbody>
+                            </table>
+		                </ul>
+                        <br>
                     </li>
                     {%- endfor %}
 		        </ul>

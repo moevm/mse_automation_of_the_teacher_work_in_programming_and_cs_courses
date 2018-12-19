@@ -1,31 +1,62 @@
 {% extends 'base.html' %}
 
 {% block content %}
-{% if g.user %}
-    <a href="{{ url_for('page.index') }}">Перейти к сводной таблице</a><br>
-    Конфигурационные данные:<br>
-    URL: <a href="{{config._Data['google_table']['URL']}}">Google Table</a><br>
-    Лист: {{config._Data['google_table']['Sheet']}}<br>
-    Колонка ФИО: {{config._Data['google_table']['FIO_Col']}}<br>
-    Строки ФИО:
-    {%- for row in config._Data['google_table']['FIO_Rows'] %}
-        {{row  }}
-    {%- endfor %}
+Пользователь {{ user.id }} <br>
+{% if loaded %}
     <br>
-    Колонка ID: {{config._Data['google_table']['ID_Col']}}<br>
-    Строки ID:
-    {%- for row in config._Data['google_table']['ID_Rows'] %}
-        {{row  }}
-    {%- endfor %}
+    Последнее обновление: {{user.last_update.strftime("%H:%M %d.%m.%y")}} <br>
+    <a href="{{ url_for('page.load') }}">Обновить</a> (это может занять некоторое время)
     <br>
-    Stepic:<br>
-    Курсы:
-    {%- for course in config._Data['stepic']['id_course'] %}
-        {{course }}
-    {%- endfor %}
-
+    <br>
+    Данные конфига<br>
+    <table class="blueTable">
+    <tbody>
+    <tr>
+         <td>Гугл таблица</td>
+        <td><a href={{config.google_table.URL}}>Перейти</a></td>
+    </tr>
+    <tr>
+        <td>Лист</td>
+        <td>{{config.google_table.Sheet}}</td>
+    </tr>
+    <tr>
+         <td>Диапазон имен</td>
+        <td>{{config.google_table.FIO_Col}}:{{config.google_table.FIO_Rows.__str__()}}</td>
+    </tr>
+    <tr>
+         <td>Диапазон id </td>
+        <td>{{config.google_table.ID_Col}}:{{config.google_table.ID_Rows.__str__()}}</td>
+    </tr>
+    <tr>
+        <td>Курсы </td>
+        <td>{{config.stepic.id_course.__str__()}}</td>
+    </tr>
+    </tbody>
+    </table>
+    <br>
+        <a href="{{ url_for('page.progress') }}">Перейти к сводной таблице</a>
+    <br>
+    <br>
+    Некорректные данные
+    <table class="blueTable">
+    <tbody>
+    <tr>
+         <td>Студенты, с некорректным id</td>
+        <td>{{incorrect.unknown_student.__str__()}}</td>
+    </tr>
+    <tr>
+        <td>Курсы с некорректным id</td>
+        <td>{{incorrect.unknown_course.__str__()}}</td>
+    </tr>
+    <tr>
+         <td>Недоступные курсы</td>
+        <td>{{incorrect.no_permission_course.__str__()}}</td>
+    </tr>
+    </tbody>
+    </table>
 {% else %}
-    Чтобы перейти к сводной таблице необходимо <a href="{{ url_for('auth.login_stepic') }}">авторизоваться</a>
+    Данные не загружены <br>
+    <a href="{{ url_for('page.load') }}">Загрузить данные</a> (это может занять некоторое время)<br>
 {% endif %}
 
 {% endblock %}

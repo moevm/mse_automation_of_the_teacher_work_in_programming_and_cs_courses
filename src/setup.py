@@ -31,7 +31,7 @@ setup(
     packages=find_packages(),
     install_requires=extract_requiremens(os.path.join(DISTRO_ROOT_PATH, 'requirements', 'base.txt')),
     test_requires=extract_requiremens(os.path.join(DISTRO_ROOT_PATH, 'requirements', 'test.txt')),
-    scripts=[os.path.join('bin', 'run_application'),os.path.join('bin', 'run.bat')],
+    scripts=[os.path.join('bin', 'run_application'),os.path.join('bin', 'run.bat'),os.path.join('bin', 'run.sh')],
     include_package_data=True,
     zip_safe=False
 )

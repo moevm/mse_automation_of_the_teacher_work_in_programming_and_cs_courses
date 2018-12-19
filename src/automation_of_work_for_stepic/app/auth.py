@@ -7,6 +7,7 @@ from flask import current_app as app
 
 #from automation_of_work_for_stepic.app.db import get_db
 from automation_of_work_for_stepic.stepic_api import StepicAPI
+from automation_of_work_for_stepic.information_processor import InformationsProcessor
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 stepic = StepicAPI()
@@ -34,8 +35,10 @@ def login():
         #очищаем ссесию
         session.clear()
         session['user_id'] = stepic.current_user_id()
-        session['user_name'] = stepic.user_name()
-        return redirect(url_for('index'))
+        session['user_name'] = stepic.get_user_name()
+        InformationsProcessor().__init__(session['user_id'])
+        #session['processor']= InformationsProcessor(session['user_id']).__dict__
+        return redirect(url_for('page.start'))
     else:
         return render_template('error/401.html')
         print("Error:login: get code error")
@@ -69,7 +72,7 @@ def logout():
     """
     session.clear()
     stepic.clear_token()
-    return redirect(url_for('index'))
+    return redirect(url_for('page.start'))
 
 def login_required(view):
     """
@@ -93,7 +96,7 @@ def login_stepic():
     Авторизация пользователя через степик
     :return:
     """
-    return redirect(stepic.url_authorize(redirect_uri))
+    return redirect(stepic.get_url_authorize(redirect_uri))
 
 @bp.route('/login_dev')
 def login_dev():
@@ -106,8 +109,10 @@ def login_dev():
         # очищаем ссесию
         session.clear()
         session['user_id'] = stepic.current_user_id()
-        session['user_name']= stepic.user_name()
-        return redirect(url_for('index'))
+        session['user_name']= stepic.get_user_name()
+        InformationsProcessor().__init__(session['user_id'])
+        #['processor'] = InformationsProcessor(session['user_id'])
+        return redirect(url_for('page.start'))
     else:
         #переходим на авторизаци степика
-        return redirect(stepic.url_authorize(redirect_uri))
+        return redirect(stepic.get_url_authorize(redirect_uri))

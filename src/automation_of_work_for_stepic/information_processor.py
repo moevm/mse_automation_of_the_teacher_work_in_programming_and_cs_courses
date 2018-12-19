@@ -2,382 +2,396 @@ from automation_of_work_for_stepic.google_table import GoogleTable
 from automation_of_work_for_stepic import configuration as conf
 from automation_of_work_for_stepic import stepic_api
 from automation_of_work_for_stepic.utility import singleton
+from automation_of_work_for_stepic.mongo_model import *
+from mongoengine import connect
+import itertools
+import datetime
 import copy
 from datetime import datetime, date
 
+import cProfile
+
+connect('stepic', host='192.168.99.100', port=32770)
+
+
+def profile(func):
+    """Decorator for run function profile"""
+
+    def wrapper(*args, **kwargs):
+        profiler = cProfile.Profile()
+        result = profiler.runcall(func, *args, **kwargs)
+        profiler.print_stats()
+        return result
+
+    return wrapper
 
 @singleton
 class InformationsProcessor:
-    def __init__(self):
-        self.stepic_api = stepic_api.StepicAPI()  # для работы со StepicApi
-        self.students = []  # информация о студентах [{'id': student_id, 'name_stepic': name_stepic, 'name_google': name_google}]
-        self.courses = []  # информация о курсах
-        self.config = conf.Configuration()  # конфигурационные данные
-        self.course_grades = []  # статистика курсов
-        self.incorrect = {  # некорректные данные
-            'unknown_user_ids': [],
-            'unknown_course_ids': [],
-            'no_permission_courses': [],
-            'not_enrolled_students': {}
-        }
-
-    def load_all(self):
-        self.create_courses()  # загрузка информации о курсе
-        self.create_students()  # загрузка информации о студентах
-        self.create_course_grades()  # загрузка информации о статистике прохождения курсов
-        self.add_course_structures()  # создание структуры курсов
-        self.add_info_about_students()  # создание полной информации о прохождении курсов студентами
-
-    def download_students(self):
+    def __init__(self,user_id=None):
         """
-        Получение id и имён студентов из google-таблицы и определение их имени на Stepic
-        Возвращает таблицу вида:
-        [
-            [id1, id2],
-            [stepic_name1, stepic_name2],
-            [google_name1, google_name2],
-        ]
-        :return: [[]]
         """
-        table_config = self.config.get_google_table_config()  # получение конфигурационных данных о google-таблицы
+        self.stepic_api = stepic_api.StepicAPI()
+        self.config = None  # конфигурационные данные
+        self.incorrect = None
+        self.students = []
+        self.courses = []
+        self.user = None
+        self.loaded = False
+
+        if user_id:
+            if self.user_loaded(user_id):
+                self.load_exist(user_id)
+                self.loaded=True
+            else:
+                self.create_user(user_id)
+                self.loaded = False
+
+    def load_new(self):
+        """
+        Скачивает информацию со степика
+        :return:
+        """
+        course_id = []
+        steps_id = {}
+
+        unknown_course = []
+        no_permission_course = []
+
+        self.create_config()
+
+        #получаем инфу со степика
+        courses_id, students_id, google_names_students = self.get_google_table_info()
+
+        #скачиваем инфу о студентах
+        student_id, unknown_student = self.create_students(students_id, google_names_students)
+
+        # скачиваем курсы
+        for c in courses_id:
+            steps = self.create_course(c)
+
+            if steps == 0:
+                unknown_course.append(c)
+                continue
+
+            if steps == 1:
+                no_permission_course.append(c)
+                continue
+
+            course_id.append(c)
+            steps_id.update({c: steps})
+
+        self.courses = course_id
+        self.students = student_id
+
+        self.config.students=self.students
+        self.config.courses=self.courses
+        self.config.save()
+        # скачиваем оценки
+        for s in student_id:
+            for v in steps_id.values():
+                self.create_grades_for_one_student(s, v)
+
+        # считаем прогресс элементов курса
+        self.create_progress()
+
+        #загружаем в бд некорректные значения
+        self.create_incorrect(unknown_student,unknown_course,no_permission_course)
+        self.user.last_update=datetime.now()
+        self.user.save()
+        self.loaded=True
+
+    def load_exist(self,user_id):
+        """
+        Загружаем уже загруженные данные
+        :param user_id:
+        :return:
+        """
+        self.user=User.objects.with_id(user_id)
+        self.config=Config.objects.with_id(user_id)
+        self.incorrect=Incorrect.objects.with_id(user_id)
+        self.students=self.config.students
+        self.courses=self.config.courses
+        self.loaded=True
+
+    def get_google_table_info(self):
+        table_config = self.config.google_table  # получение конфигурационных данных о google-таблицы
         a = GoogleTable()
-        a.set_table(table_config['URL'], table_config['Sheet'])  # получение таблицы
 
-        google_names = a.get_list(table_config['FIO_Col'], table_config['FIO_Rows'][0],
-                                  table_config['FIO_Rows'][1])  # получение списка имен студентов из google-таблицы
-        ids = a.get_list(table_config['ID_Col'], table_config['ID_Rows'][0],
-                         table_config['ID_Rows'][1])  # получение списка id студентов на Stepic из google-таблицы
+        a.set_table(table_config.URL, table_config.Sheet)  # получение таблицы
 
-        stepic_names = self.stepic_api.get_user_name(ids)  # получение списка имён студентов на Stepic по их id
-        return [ids, stepic_names, google_names]
+        google_names_students = a.get_list(table_config.FIO_Col, table_config.FIO_Rows[0],
+                                           table_config.FIO_Rows[
+                                               1])  # получение списка имен студентов из google-таблицы
+        students_id = a.get_list(table_config.ID_Col, table_config.ID_Rows[0],
+                                 table_config.ID_Rows[1])  # получение списка id студентов на Stepic из google-таблицы
 
-    def create_students(self):
+        courses_id = self.config.stepic.id_course
+        students_id = [int(i) for i in students_id]
+        courses_id = [int(i) for i in courses_id]
+
+        return courses_id, students_id, google_names_students
+
+    def user_loaded(self,user_id):
+        return User.objects.with_id(user_id) and User.objects.with_id(user_id).last_update
+
+    ## создание таблиц
+
+    def create_user(self, user_id):
+        self.user = User(user_id)
+        self.user.save()
+
+
+    def create_config(self):
         """
-        Возвращает информацию о студентах
-        self.students = [
-            {
-                'id': student_id,
-                'name_stepic': name_stepic,
-                'name_google': name_google
+        Возвращает список список курсов из конфига и список студентов из гугл таблицы
+        """
+
+        self.config = Config(id=self.user.id,**(conf.Configuration().get_data()))
+        self.config.save()
+
+    def create_incorrect(self,unknown_student,unknown_course,no_permission_course):
+        self.incorrect=Incorrect(id=self.user.id, unknown_student=unknown_student, unknown_course=unknown_course, no_permission_course=no_permission_course)
+        self.incorrect.save()
+
+    def create_students(self, ids, google_names):
+        stepic_names = self.stepic_api.get_user_name(ids)
+        incorrect = []
+        students_id = []
+        for i, gn in zip(ids, google_names):
+            sn = stepic_names[i]
+            if sn is None:
+                print(f"Неизвестный пользователь id={i}")
+                incorrect.append(gn + '(' + str(i) + ')')
+            else:
+                Student(id=i, name_stepic=sn, name_google=gn).save()
+                students_id.append(i)
+
+        return students_id, incorrect
+
+    def create_grades_for_one_student(self, student, steps):
+        """
+        Скачивает решения студентов и сохраняет в базу данных
+        :param courses_id:
+        :param students_id:
+        :return:
+        """
+        for s in steps:
+            # получаем решения
+            solutions, page = self.stepic_api.solutions(student, s)
+            # получаем даты решений
+            correct_date, wrong_date = self.get_correct_wrong_sol_date(solutions)
+
+            data = {
+                'student': student,
+                'step': s,
+                'is_passed': True if correct_date else False,
+                'correct_date': correct_date,
+                'wrong_date': wrong_date
             }
-        ]
-        :return: self.students
-        """
-        if not self.students:
-            info = self.download_students()  # получение информации о студентах
-            self.students = [{'id': stud_id, 'name_stepic': info[1][i], 'name_google': info[2][i]} for i, stud_id in
-                             enumerate(info[0])]  # формирование данных о студентах
-            for student in self.students:
-                if not student['name_stepic']:
-                    print(f"Неизвестный пользователь id={student['id']}")
-                    self.incorrect['unknown_user_ids'].append(student)
-                    self.students.remove(student)
-        return self.students
 
-    def create_courses(self):
-        """
-        Возвращает информацию о курсах
-        self.courses = [
-            {
-                'id': course_id,
-                'title': course_title
-            }
-        ]
-        """
-        if not self.courses:
-            try:
-                self.courses = [{'id': str(i), 'title': self.stepic_api.get_course_name(str(i))} for i in
-                                self.config.get_stepic_config()['id_course']]  # формирование данных о курсах
-                for course in self.courses:
-                    if not course['title']:
-                        print(f"Неизвестный курс id={course['id']}")
-                        self.incorrect['unknown_course_ids'].append(course)
-                        self.courses.remove(course)
-            except Exception as e:
-                print(f"Error in function courses_info\n\t{e}")
-                raise e
-        return self.courses
+            # если есть вторая страница  и нет одной из даты
+            if page and not correct_date:
+                data['correct_date'] = self.stepic_api.date_first_correct_solutions(student, s)
+                data['is_passed'] = True if data['correct_date'] else False
 
-    def create_course_grades(self):
-        """
-        По данным из json со статистикой курсов и данным по id студентов заполняет поле self.course_grades - статистику прохождения
-        курса по каждому студенту в %. При отстутствии студента на курсе возвращает "нет"
-        [
-            {
-                'student_id':
-                {
-                    'progress': 'xx.x%' (or 'Нет'),
-                    'steps':
-                    {
-                        'step_id': is_passed
-                    }
-                }
-            }
-        ]
-        :return: self.course_grades
-        """
-        if not self.course_grades:
-            if self.students and self.courses:
-                result = []
-                grades = [self.stepic_api.get_course_statistic(c['id']) for c in
-                          self.courses]  # получение статистики по курсу
-                student_ids = [st['id'] for st in self.students]  # список id всех студентов
-                for i, gr in enumerate(grades):
-                    if gr:
-                        res_dict = {}
-                        for student in student_ids:
-                            res = [self.calculate_progress(i) for i in gr if
-                                   str(i['user']) == student]  # подсчет прогресса студента
-                            # сохранение прогресса студента по курсу
-                            if res:
-                                res_dict.update(res[0])  # прогресс существует
-                            else:
-                                if str(gr[0]['course']) not in self.incorrect['not_enrolled_students']:
-                                    self.incorrect['not_enrolled_students'].update({str(gr[0]['course']): []})
-                                self.incorrect['not_enrolled_students'][str(gr[0]['course'])].append(student)
-                                res_dict.update({  # прогресс отсутсвует (=студент не поступил на курс)
-                                    student: {
-                                        'progress': 'Нет',
-                                        'steps': {}
-                                    }
-                                })
-                        result.append(res_dict)  # сохранение прогресса студентов по курсу
-                    else:
-                        print(f"Нет доступа к курсу {self.courses[i]}")
-                        self.incorrect['no_permission_courses'].append(self.courses[i])
-                        self.courses.remove(self.courses[i])
-                self.course_grades = result
-        return self.course_grades
+            if page and not wrong_date:
+                data['wrong_date'] = self.stepic_api.date_first_wrong_solutions(student, s)
 
-    def calculate_progress(self, grade_user):
-        """
-        Принимает на вход статистику студента по прохождению курса, где для каждого шага указано, пройден он или нет.
-        Возвращает процент прохождения курса и факт прохождения студентом каждого шага
-        {
-            stud_id:
-                {
-                    'progress': 'xx.x%',
-                    'steps':
-                    {
-                        step_id: is_passed
-                    }
-                }
-        }
-        :param grade_user: статистика студента по прохождению курса
-        :return: {} с данными о %-ом прохождении курса и о факте прохождения всех шагов курса
-        """
-        result = grade_user['results']
-        progress = 0
-        flag_steps = {}
-        for v in result.values():
-            flag_steps[str(v['step_id'])] = v['is_passed']  # сохранение факта прохождения шага
-            if v['is_passed']:
-                progress += 1  # подсчёт кол-ва решенных шагов
-        return {
-            str(grade_user['user']):
-                {
-                    'progress': str(progress / len(result) * 100) + '%',  # подсчет % прохождения курса студентом
-                    'steps': flag_steps  # флаги прохождения шагов
-                }
-        }
+            Grade(**data).save()
 
-    def add_info_about_students(self):
+    def create_course(self, course_id):
         """
-        Создаёт информацию о прохождении студентами курсов, дополняя элементы self.students полем
-        'courses':[
-            {
-                'id': course_id,
-                'progress': 'xx.x%',
-                'sections': [
-                    {
-                        'date': 'dd.mm.yyyy'(or '-'),
-                        'id': section_id,
-                        'is_passed': True/False,
-                        'lessons': [
-                            {
-                                'id': lesson_id,
-                                'steps': [
-                                    {
-                                        'first_false': 'dd.mm.yyyy'(or '-'),
-                                        'first_true': 'dd.mm.yyyy'(or '-'),
-                                        'id': step_id,
-                                        'is_passed': True/False
-                                    }
-                                ],
-                                'title': lesson_title
-                            }
-                        ],
-                        'progress': 'xx.x%',
-                        'title': section_title
-                    }
-                ],
-                'title': course_title
-            }
-        ]
+        Скачивает со степика ОДИН  КУРС и добаыляе его в базу данных
+        :param course_id: id курса
+        :return: 1 - к курсу нет доступа, 0 - курса не существует иначе степы
         """
-        try:
-            for student in self.students:  # для каждого студента
-                stud_courses = []
-                for i, course in enumerate(self.courses):  # для каждого курса
-                    course = copy.deepcopy(course)  # глубокое копирование структуры курса
-                    if self.course_grades[i][student['id']][
-                        'steps']:  # если статистика прохождения студента не пуста (он поступил на курс)
-                        for sect in course['sections']:  # для всех модулей курса
-                            sect_date = date(1970, 1,
-                                             1)  # для определения последнего решения модуля, в случае его полного прохождения
-                            step_counter = 0  # счетчик кол-ва всех шагов
-                            correct_step_counter = 0  # счетчик кол-ва верно решенных шагов
-                            for lesson in sect['lessons']:  # для всех уроков модуля
-                                steps = []
-                                for step in lesson['steps']:  # для всех шагов урока
-                                    if step in self.course_grades[i][student['id']][
-                                        'steps']:  # если шаг существует в статистике(шаг с решением)
-                                        step_counter += 1  # увеличение счетчика шагов
-                                        date_correct = self.stepic_api.get_date_of_first_correct_sol_for_student(step,
-                                                                                                                 student[
-                                                                                                                     'id'])  # получение даты первого верного решения
-                                        if date_correct:
-                                            correct_step_counter += 1  # если дата существует - шаг пройден - увеличение счетчига верно решенных шагов
-                                            date_correct = datetime.date(date_correct)
-                                            if date_correct > sect_date:  # определение самого позднего решения в модуле
-                                                sect_date = date_correct
-                                            date_correct = date_correct.strftime("%d.%m.%Y")
-                                        else:
-                                            date_correct = '-'  # верное решение отсутсвует - шаг не пройден
-                                        date_wrong = self.stepic_api.get_date_of_first_wrong_sol_for_student(step,
-                                                                                                             student[
-                                                                                                                 'id'])  # получение даты первого неверного решения
-                                        if date_wrong:
-                                            date_wrong = datetime.date(date_wrong).strftime("%d.%m.%Y")
-                                        else:
-                                            date_wrong = '-'  # неверное решение отсутсвует
-                                        steps.append(  # сохранение информации о шаге
-                                            {
-                                                'id': step,
-                                                'is_passed': self.course_grades[i][student['id']]['steps'][step],
-                                                'first_true': date_correct,
-                                                'first_false': date_wrong,
-                                            }
-                                        )
-                                lesson.update({'steps': steps})  # сохранение информцаии о шагах в уроке
-                            if correct_step_counter != step_counter:
-                                sect_date = '-'  # модуль не пройден полностью - дата последнего верного решения модуля отсутствует
-                            else:
-                                sect_date = sect_date.strftime(
-                                    "%d.%m.%Y")  # последнее верное решение в модуле, если он пройден полностью
-                            sect.update({
-                                'date': sect_date,
-                                'progress': str(100 * correct_step_counter / step_counter) + '%',
-                                'is_passed': correct_step_counter == step_counter
-                            })  # сохранение информцаии об уроках в модуле
-                        course.update({'progress': self.course_grades[i][student['id']][
-                            'progress']})  # сохранение информцаии о модулях в курсе, если прогресс существует (студент поступил на курс)
-                    else:
-                        course.update({
-                            'progress': 'Нет',
-                            'sections': []
-                        })  # студент не поступил на курс - статистика о прохождении отсутствует
-                    stud_courses.append(course)  # сохранение информации о курсе для студента
-                student.update({'courses': stud_courses})  # информация о курсах студента
-        except Exception as e:
-            print(f"Error in function add_info_about_students\n\t{e}")
-            raise e
-
-    def add_course_structures(self):
-        """
-        Создаёт информацию о структуре курса, дополняя элементы self.courses полем
-        'sections': [
-            {
-                'id': 'section_id',
-                'lessons': [
-                    {
-                        'id': 'lesson_id',
-                        'steps': ['step_id'],
-                        'title': 'lesson_title'
-                    }
-                ],
-                "title": "section_title"
-            }
-        ]
-        """
-        try:
-            for course in self.courses:  # для каждого курса
-                course['sections'] = self.stepic_api.course_structure(course['id'])  # получение структуры курса
-        except Exception as e:
-            print(f"Error in function add_course_structures\n\t{e}")
-            raise e
-
-    def table_step_info(self, course_id):
-        """
-        Возвращает таблицу вида
-        [
-            [id_stud, name_stud, id_step, date_first_solve, is_solved]
-        ]
-        с информацией о прохождении степов курса студентами
-        :param course_id: str - id курса
-        :return: [[]]
-        """
-        try:
-            table = []
-            for student in self.students:
-                course = [i for i in self.courses if i['id'] == course_id][0]
-                student_table_rows = [self.short_step_info(step, student['id']) for sect in course['sections'] for
-                                      lesson in sect['lessons'] for step in lesson['steps']]
-                for row in student_table_rows:
-                    row.insert(1, student['name_stepic'])
-                # table.append(student_table_rows) # с внутренней группировкой по студентам [[строки студента1], [строки студента2], [строки студента3]]
-                table += student_table_rows  # без внутренней группировки [строки студента1, строки студента2, строки студента3]
-            return table
-        except Exception as e:
-            print(f"Error in function table_step_info (courses_id={course_id})\n\t{e}")
-            raise e
-
-    def short_step_info(self, step_id, stud_id):
-        """
-        Возвращает краткую информацию о прохождении студентом шага = [stud_id, id_step, date_first_solve, is_solved]
-        :param step_id: str - id степа
-        :param stud_id: str - id студента
-        :return: []
-        """
-        date_correct = self.stepic_api.get_date_of_first_correct_sol_for_student(step_id, stud_id)
-        is_passed = True
-        if date_correct:
-            date_correct = datetime.date(date_correct).strftime("%d.%m.%Y")
+        course = self.stepic_api.course(course_id, attribute=['id', 'title', 'sections', 'actions'])
+        if course:
+            if course['actions']:
+                course.pop('actions')
+            else:
+                return 1
         else:
-            date_correct = '-'
-            is_passed = False
-        return [
-            stud_id,
-            step_id,
-            date_correct,
-            is_passed,
-        ]
+            return 0
 
-    def get_student_by_id(self, stud_id: str):
-        try:
-            student = [stud for stud in self.students if stud_id == stud['id']]
-            if student:
-                return student[0]
+        steps = self.create_sections(course['sections'])
+        Course(**course).save()
+        return steps
+
+    def create_sections(self, sections_id):
+        """
+        Скачивает секции со степика  и добавляет их базу данных
+        :param sections_id: список id секции
+        :return: список степов
+        """
+        sections = self.stepic_api.sections(sections_id, attribute=['id', 'title', 'units', 'course'])
+        units_id = [u for s in sections.values() for u in s['units']]
+        units, steps = self.create_units_lessons(units_id)
+
+        for s in sections.values():
+            s['lessons'] = [units[u]['lesson'] for u in s['units']]
+            s.pop('units')
+            Section(**s).save()
+        return steps
+
+    def create_units_lessons(self, units_id):
+        """
+        Скачивает юниты и уроки со степика и добавляет уроки в азу данных
+        :param units_id: список id юнитов
+        :return: список юнитов, список степов
+        """
+        units = self.stepic_api.units(units_id, attribute=['lesson', 'section'])
+        lessons_id = [u['lesson'] for u in units.values()]
+        lessons = self.stepic_api.lessons(lessons_id, attribute=['id', 'title', 'steps'])
+        steps_id = []
+        for u in units.values():
+            steps_id.extend(lessons[u['lesson']]['steps'])
+
+            Lesson(section=u['section'], **(lessons[u['lesson']])).save()
+
+        steps_id = self.create_steps(steps_id)
+        return units, steps_id
+
+    def create_steps(self, steps_id):
+        """
+        Скачивает степы со степика, отбирает степы-задачи и добавляет в базу данных
+        :param steps_id: список id степов
+        :return: список стетов - задач
+        """
+        steps = self.stepic_api.steps(steps_id, attribute=['id', 'position', 'actions', 'lesson'])
+        # удаляем временную информацию
+        for k, v in steps.items():
+            if 'submit' not in v['actions']:
+                Lesson.objects.with_id(v['lesson']).update(pull__steps=k)
+                steps_id.remove(k)
             else:
-                print(f"Неизветсный студент id={stud_id}")
-        except Exception as e:
-            print(f"Error in function get_student_info (stud_id={stud_id})\n\t{e}")
-            raise e
+                v.pop('actions')
+                # добавляем в базу
+                Step(**v).save()
+        return steps_id
 
-    def get_course_by_id(self, course_id: str):
-        try:
-            course = [course for course in self.courses if course_id == course['id']]
-            if course:
-                return course[0]
+    def create_progress(self):
+        """
+        Создает прогресс студентов, добавляет в базу данных
+        Создает прогресс степа (количество решивших студентов)
+        :return: None
+        """
+        for st in self.students:
+            for c in self.courses:
+                pr_c = 0
+                count_c = 0
+                date_c = []
+                for s in Section.objects.filter(course=c):
+                    pr_s = 0
+                    count_s = 0
+                    date_s = []
+                    for l in Lesson.objects.filter(section=s.id):
+                        pr_l = Grade.progress(student=st, steps=l.steps)
+                        if pr_l == 100.0:
+                            date = Grade.first_correct_date(student=st, steps=l.steps)
+                            Student.add_correct_date(student=st, lesson=l.id, date=date)
+                            date_s.append(date)
+                        else:
+                            date_s.append(None)
+
+                        Student.add_progress(student=st, lesson=l.id, progress=pr_l)
+
+                        pr_s += pr_l * len(l.steps)
+                        count_s += len(l.steps)
+
+                    if all(date_s):
+                        date = max(date_s)
+                        Student.add_correct_date(student=st, section=s.id, date=date)
+                        date_c.append(date)
+                    else:
+                        date_c.append(None)
+
+                    Student.add_progress(student=st, section=s.id, progress=pr_s / count_s)
+
+                    pr_c += pr_s
+                    count_c += count_s
+
+                if all(date_c):
+                    date = max(date_c)
+                    Student.add_correct_date(student=st, course=c, date=date)
+                else:
+                    pass
+
+                Student.add_progress(student=st, course=c, progress=pr_c / count_c)
+
+        for sp in Step.objects.all():
+            sp.update(count_passed=Grade.objects.filter(student__in=self.students, step=sp.id, is_passed=True).count())
+
+    def get_correct_wrong_sol_date(self, solutions):
+
+        """
+        Получает дату правильного и неправильного решений
+        :param solutios: список решений - list(dict)
+        :return: correct_date, wrong_date - str
+        """
+        correct_date = None
+        wrong_date = None
+        if solutions:
+            if solutions[0]['status'] == 'wrong':
+                wrong_date = solutions[0]['time']
+
+                try:
+                    correct_date = next(filter(lambda x: x['status'] == 'correct', solutions))['time']
+                except:
+                    pass
             else:
-                print(f"Неинициализированный курс id={course_id}")
-        except Exception as e:
-            print(f"Error in function get_course_by_id (course_id={course_id})\n\t{e}")
-            raise e
+                correct_date = solutions[0]['time']
 
+                try:
+                    wrong_date = next(filter(lambda x: x['status'] == 'wrong', solutions))['time']
+                except:
+                    pass
+        return correct_date, wrong_date
+
+    # выдача инфы для отображения
+
+    def get_progress_table(self):
+        """
+        Возвращает информауию для заполнения информации для запонения сводной таблицы
+        :return: list( mongo_model.Student() ), list( mongo_model.Course() )
+        """
+        # создаем список курсов и студентов
+        courses = Course.objects.exclude('sections').filter(id__in=self.courses)
+        students = Student.objects.only('id', 'name_google', 'progress_courses').filter(id__in=self.students)
+        return students, courses
+
+    def get_student_page(self, student_id):
+        """
+        Возвращает данные для заполнения страницы о студентах
+        :param course_id: id курса - int
+        :return: mongo_model.Student(), list( mongo_model.Course() ), Section, Lesson, Step, Grade
+        """
+        st = Student.objects.with_id(student_id)
+        co = Course.objects.filter(id__in=self.courses)
+
+        return st, co, Section, Lesson, Step, Grade
+
+    def get_course_page(self, course_id):
+        """
+        Возвращает данные для заполнения страницы о курсах
+        :param course_id: id курса - int
+        :return: list( mongo_model.Student() ) ,mongo_model.Course(), Section, Lesson, Step, Grade
+        """
+        st = Student.objects.filter(id__in=self.students).all()
+        co = Course.objects.with_id(course_id)
+        return st, co, Section, Lesson, Step, Grade
+
+    def get_start_page(self):
+        """
+        Возвращает информацию о пользователе
+        """
+        return self.loaded,self.user,self.config,self.incorrect
 
 if __name__ == "__main__":
     a = InformationsProcessor()
-    a.stepic_api.load_token()
-    a.load_all()
-    print(a.table_step_info(a.courses[0]['id']))
+    a.create_config()
+    # a.stepic_api.load_token()
+    # a.main_1()
+    # a.students = [59934516, 19671119, 19618699, 19679512, 19618655, 2686236]
+    # a.courses = [37059]
+    # a.get_course_page(37059)

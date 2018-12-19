@@ -9,17 +9,17 @@
 <thead>
 <tr>
     <th>Name</th>
-    {%- for c in course %}
-    <th><a href="{{ url_for('page.course_page',id=c['id']) }}">{{c['title']}}</a></th>
+    {%- for c in courses %}
+    <th><a href="{{ url_for('page.course_page',id=c.id) }}">{{c.title}}</a></th>
     {%- endfor %}
 </tr>
 </thead>
 <tbody>
-{% for n in names %}
+{% for s in students %}
 <tr>
-    <td><a href="{{ url_for('page.student_page',id=n['id']) }}"> {{n['name_google']}} </a></td>
-    {% for p in progress %}
-    <td>{{p[n['id']]['progress']}}</td>
+    <td><a href="{{ url_for('page.student_page',id=s.id) }}"> {{s.name_google}} </a></td>
+    {% for c in courses %}
+    <td>{{s.progress_courses[c.id.__str__()]}}</td>
     {%- endfor %}
 </tr>
 {% endfor %}
