@@ -5,7 +5,6 @@ from automation_of_work_for_stepic.utility import singleton
 from automation_of_work_for_stepic.mongo_model import *
 from mongoengine.connection import get_db
 
-import datetime
 from datetime import datetime
 
 @singleton
@@ -169,7 +168,6 @@ class InformationsProcessor:
             solutions, page = self.stepic_api.solutions(student, s)
             # получаем даты решений
             correct_date, wrong_date = self.get_correct_wrong_sol_date(solutions)
-
             data = {
                 'student': student,
                 'step': s,
@@ -323,16 +321,19 @@ class InformationsProcessor:
         if solutions:
             if solutions[0]['status'] == 'wrong':
                 wrong_date = solutions[0]['time']
-
+                wrong_date= datetime.strptime(wrong_date, '%Y-%m-%dT%H:%M:%SZ')
                 try:
                     correct_date = next(filter(lambda x: x['status'] == 'correct', solutions))['time']
+                    correct_date=datetime.strptime(correct_date, '%Y-%m-%dT%H:%M:%SZ')
                 except:
                     pass
             else:
                 correct_date = solutions[0]['time']
+                correct_date = datetime.strptime(correct_date, '%Y-%m-%dT%H:%M:%SZ')
 
                 try:
                     wrong_date = next(filter(lambda x: x['status'] == 'wrong', solutions))['time']
+                    wrong_date = datetime.strptime(wrong_date, '%Y-%m-%dT%H:%M:%SZ')
                 except:
                     pass
         return correct_date, wrong_date
