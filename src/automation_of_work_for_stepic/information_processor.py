@@ -133,6 +133,7 @@ class InformationsProcessor:
         """
         Возвращает список список курсов из конфига и список студентов из гугл таблицы
         """
+        conf.Configuration().load_config()
 
         self.config = Config(id=self.user.id,**(conf.Configuration().get_data()))
         self.config.save()
