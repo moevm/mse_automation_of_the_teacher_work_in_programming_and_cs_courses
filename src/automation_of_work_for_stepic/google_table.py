@@ -24,6 +24,7 @@ class GoogleTable:
             self.Table = None
         else:
             logging.error("Указанного пути к токену google_api не существует")
+            raise ValueError("Указанного пути к токену google_api не существует")
 
     def set_table(self, url, sheet=0):
         """
@@ -35,13 +36,18 @@ class GoogleTable:
         try:
             self.Table = self.gc.open_by_url(url)
         except gspread.exceptions.NoValidUrlKeyFound:
+            self.Table = None
+            self.Sheet = None
             logging.error("Не найден корректный ключ таблицы в URL, проверьте правильность ссылки на таблицу")
+            raise ValueError("Не найден корректный ключ таблицы в URL, проверьте правильность ссылки на таблицу")
         else:
             try:
                 self.set_sheet(sheet)
             except gspread.exceptions.APIError:
                 self.Table = None
+                self.Sheet = None
                 logging.error("Ошибка google_api, проверьте правильность ссылки на таблицу")
+                raise ValueError("Ошибка google_api, проверьте правильность ссылки на таблицу")
 
     def set_sheet(self, sheet):
         """
@@ -57,15 +63,18 @@ class GoogleTable:
             self.Sheet = self.Table.get_worksheet(sheet)  # если лист таблицы задан номером
             if not self.Sheet:
                 logging.warning(f"Несуществующий лист таблицы №{sheet}")
+                raise ValueError(f"Несуществующий лист таблицы №{sheet}")
         elif type(sheet) is str:
             try:
                 self.Sheet = self.Table.worksheet(sheet)  # если лист таблицы задан именем
             except gspread.exceptions.WorksheetNotFound:
                 self.Sheet = None
                 logging.warning(f"Несуществующий лист таблицы с именем '{sheet}'")
+                raise ValueError(f"Несуществующий лист таблицы с именем '{sheet}'")
         else:
-            logging.warning(f"Неверный формат sheet: {sheet}")
             self.Sheet = None
+            logging.warning(f"Неверный формат sheet: {sheet}")
+            raise ValueError(f"Неверный формат sheet: {sheet}")
 
     def get_column(self, col):
         """
@@ -78,17 +87,21 @@ class GoogleTable:
                 try:
                     return self.Sheet.col_values(col)  # получение столбца, заданного номером
                 except gspread.exceptions.IncorrectCellLabel:
-                    print(f"Некорректный номер столбца: {col}")
+                    logging.warning(f"Некорректный номер столбца: {col}")
+                    raise ValueError(f"Некорректный номер столбца: {col}")
             elif type(col) is str:
                 try:
                     return self.Sheet.col_values(
                         gspread.utils.a1_to_rowcol(col + "1")[1])  # получение столбца, заданного буквой
                 except gspread.exceptions.APIError:
-                    print(f"Ошибка GoogleAPI, проверьте правильность имени столбца: '{col}'")
+                    logging.error(f"Ошибка GoogleAPI, проверьте правильность имени столбца: '{col}'")
+                    raise ValueError(f"Ошибка GoogleAPI, проверьте правильность имени столбца: '{col}'")
                 except gspread.exceptions.IncorrectCellLabel:
-                    print(f"Некорректное имя столбца: '{col}' (Проверьте раскладку клавиатуры)")
+                    logging.warning(f"Некорректное имя столбца: '{col}' (Проверьте раскладку клавиатуры)")
+                    raise ValueError(f"Некорректное имя столбца: '{col}' (Проверьте раскладку клавиатуры)")
             else:
-                print(f"Неверный формат col(столбца): {col}")
+                logging.warning(f"Неверный формат col(столбца): {col}")
+                raise ValueError(f"Неверный формат col(столбца): {col}")
 
     def get_row(self, num):
         """
