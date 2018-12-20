@@ -3,25 +3,34 @@ import os
 import logging
 from automation_of_work_for_stepic.utility import singleton
 
+
 @singleton
 class Configuration:
-    _Data = {}
 
     def __init__(self, path_config_file=os.path.join("resources", "config.json")):
+        self._Data = None
+        self.path = path_config_file  # сохранение пути к конфигурационному файлу для возможности обновления
+        self.load_config()
+
+    def load_config(self):
         """
-        Считывание конфигурационного файла
+        Считывание конфигурационного файла (путь хранится в self.path)
         :return: -
         """
-        if os.path.exists(path_config_file):
-            with open(path_config_file, 'r', encoding='utf-8') as fh:
+        if os.path.exists(self.path):
+            with open(self.path, 'r', encoding='utf-8') as fh:
                 try:
                     data = json.load(fh)
                 except json.decoder.JSONDecodeError:
                     logging.error("Ошибка в конфигурационном файле")
+                    self._Data = None   # в случае ошибки обнуление прошлых данных
+                    raise ValueError("Ошибка в конфигурационном файле")
                 else:
                     self._Data = data
         else:
-            logging.error("Указанного пути не существует")
+            logging.error(f"Указанного пути не существует, path='{self.path}'")
+            self._Data = None   # в случае ошибки обнуление прошлых данных
+            raise ValueError(f"Указанного пути не существует, path='{self.path}'")
 
     def get_data(self):
         """
@@ -55,8 +64,10 @@ class Configuration:
                 return self._Data[key]
             else:
                 logging.error(f"Ключ недействителен: '{key}'")
+                raise ValueError(f"Ключ недействителен: '{key}'")
         else:
             logging.error("Конфигурационные данные отсутствуют")
+            raise ValueError("Конфигурационные данные отсутствуют")
 
 
 if __name__ == "__main__":
