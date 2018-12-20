@@ -39,7 +39,9 @@ linux - run.sh args <br>
 
 ## Презентации
 [Этап1](https://github.com/moevm/mse_automation_of_the_teacher_work_in_programming_and_cs_courses/raw/master/Presentations/%D0%9F%D1%80%D0%BE%D0%B5%D0%BA%D1%824_%D0%AD%D1%82%D0%B0%D0%BF1.pptx) <br>
-[Этап2](https://github.com/moevm/mse_automation_of_the_teacher_work_in_programming_and_cs_courses/blob/master/Presentations/%D0%9F%D1%80%D0%BE%D0%B5%D0%BA%D1%824_%D0%AD%D1%82%D0%B0%D0%BF2.pptx)
+[Этап2](https://github.com/moevm/mse_automation_of_the_teacher_work_in_programming_and_cs_courses/blob/master/Presentations/%D0%9F%D1%80%D0%BE%D0%B5%D0%BA%D1%824_%D0%AD%D1%82%D0%B0%D0%BF2.pptx) <br>
+[Этап3](https://github.com/moevm/mse_automation_of_the_teacher_work_in_programming_and_cs_courses/blob/master/Presentations/%D0%9F%D1%80%D0%BE%D0%B5%D0%BA%D1%824_%D0%AD%D1%82%D0%B0%D0%BF3.pdf)<br>
+[Общая](https://github.com/moevm/mse_automation_of_the_teacher_work_in_programming_and_cs_courses/blob/master/Presentations/%D0%9F%D1%80%D0%BE%D0%B5%D0%BA%D1%824.pdf) <br>
 
 ## Демонстрация
 [Этап1](https://youtu.be/miiINJJ0cvg) <br>
