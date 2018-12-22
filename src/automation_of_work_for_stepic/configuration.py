@@ -28,9 +28,9 @@ class Configuration:
                 else:
                     self._Data = data
         else:
-            logging.error(f"Указанного пути не существует, path='{self.path}'")
+            logging.error("Указанного пути не существует, path='%s'", self.path)
             self._Data = None   # в случае ошибки обнуление прошлых данных
-            raise ValueError(f"Указанного пути не существует, path='{self.path}'")
+            raise ValueError("Указанного пути не существует, path='%s'", self.path)
 
     def get_data(self):
         """
@@ -63,8 +63,8 @@ class Configuration:
             if key in self._Data:
                 return self._Data[key]
             else:
-                logging.error(f"Ключ недействителен: '{key}'")
-                raise ValueError(f"Ключ недействителен: '{key}'")
+                logging.error("Ключ недействителен: '%s'", key)
+                raise ValueError("Ключ недействителен: '%s'", key)
         else:
             logging.error("Конфигурационные данные отсутствуют")
             raise ValueError("Конфигурационные данные отсутствуют")

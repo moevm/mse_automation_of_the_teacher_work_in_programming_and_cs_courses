@@ -148,7 +148,7 @@ class InformationsProcessor:
         for i, gn in zip(ids, google_names):
             sn = stepic_names[i]
             if sn is None:
-                print(f"Неизвестный пользователь id={i}")
+                print("Неизвестный пользователь id=%s", i)
                 incorrect.append(gn + '(' + str(i) + ')')
             else:
                 Student(id=i, name_stepic=sn, name_google=gn).save()
@@ -378,7 +378,8 @@ class InformationsProcessor:
         return self.loaded,self.user,self.config,self.incorrect
 
 if __name__ == "__main__":
-    a = InformationsProcessor()
+    db = connect('stepic', host="127.0.0.1", port=27017)
+    a = InformationsProcessor(user_id=19618699)
     a.create_config()
     # a.stepic_api.load_token()
     # a.main_1()
