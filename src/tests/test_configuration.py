@@ -27,7 +27,9 @@ class TestLoadConfiguration(unittest.TestCase):
         """
         config = conf.Configuration()
         conf.Configuration.__init__(config, os.path.join("tests", "resources", "config.json"))
-        correct_data_config = {'google_table': {'URL': 'https://docs.google.com/spreadsheets/d/1t1szRuyb023sfuXLf6p-fDLmMcNtAmKfK0enj4URTxU', 'Sheet': 0, 'FIO_Col': 1, 'FIO_Rows': [11, 21], 'ID_Col': 5, 'ID_Rows': [11, 21]}, 'stepic': {'id_course': [64]}}
+        correct_data_config = {'google_table': {
+            'URL': 'https://docs.google.com/spreadsheets/d/1t1szRuyb023sfuXLf6p-fDLmMcNtAmKfK0enj4URTxU', 'Sheet': 0,
+            'FIO_Col': 1, 'FIO_Rows': [11, 21], 'ID_Col': 5, 'ID_Rows': [11, 21]}, 'stepic': {'id_course': [64]}}
         self.assertEqual(config.get_data(), correct_data_config)
 
     @ignore_warnings
@@ -41,16 +43,18 @@ class TestLoadConfiguration(unittest.TestCase):
         with self.assertRaises(ValueError) as raised_exception:
             config.path = os.path.join("resources", "wrong_path.json")
             config.load_config()
-        self.assertEqual(raised_exception.exception.args[0], "Указанного пути не существует, path='resources\wrong_path.json'")
+        self.assertEqual(raised_exception.exception.args[0],
+                         "Указанного пути не существует, path='resources\wrong_path.json'")
         with self.assertRaises(ValueError) as raised_exception:
             config.path = os.path.join("my_resources", "config.json")
             config.load_config()
-        self.assertEqual(raised_exception.exception.args[0], "Указанного пути не существует, path='my_resources\config.json'")
+        self.assertEqual(raised_exception.exception.args[0],
+                         "Указанного пути не существует, path='my_resources\config.json'")
         with self.assertRaises(ValueError) as raised_exception:
             config.path = os.path.join("windows", "config.json")
             config.load_config()
-        self.assertEqual(raised_exception.exception.args[0], "Указанного пути не существует, path='windows\config.json'")
-
+        self.assertEqual(raised_exception.exception.args[0],
+                         "Указанного пути не существует, path='windows\config.json'")
 
     @ignore_warnings
     @mock.patch('sys.stderr')
@@ -93,7 +97,8 @@ class TestGetConfig(unittest.TestCase):
         config = conf.Configuration()
         config.path = os.path.join("tests", "resources", "config.json")
         config.load_config()
-        correct_google = {'URL': 'https://docs.google.com/spreadsheets/d/1t1szRuyb023sfuXLf6p-fDLmMcNtAmKfK0enj4URTxU', 'Sheet': 0, 'FIO_Col': 1, 'FIO_Rows': [11, 21], 'ID_Col': 5, 'ID_Rows': [11, 21]}
+        correct_google = {'URL': 'https://docs.google.com/spreadsheets/d/1t1szRuyb023sfuXLf6p-fDLmMcNtAmKfK0enj4URTxU',
+                          'Sheet': 0, 'FIO_Col': 1, 'FIO_Rows': [11, 21], 'ID_Col': 5, 'ID_Rows': [11, 21]}
         correct_stepic = {'id_course': [64]}
         self.assertEqual(config.get_google_table_config(), correct_google)
         self.assertEqual(config.get_config_by_key('google_table'), correct_google)

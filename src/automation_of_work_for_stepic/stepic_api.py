@@ -47,7 +47,8 @@ class StepicAPI:
         :param redirect_uri:  ссылка на адрес, который получит код авторизации
         :return: сформированный url
         """
-        return self.url_auth + 'authorize/?response_type=code&client_id='+str(self.client_id)+'&redirect_uri='+str(redirect_uri)
+        return self.url_auth + 'authorize/?response_type=code&client_id=' + str(
+            self.client_id) + '&redirect_uri=' + str(redirect_uri)
 
     def init_token(self, code: str, redirect_uri: str):
         """

@@ -23,14 +23,14 @@ class Configuration:
                     data = json.load(fh)
                 except json.decoder.JSONDecodeError:
                     logging.error("Ошибка в конфигурационном файле")
-                    self._Data = None   # в случае ошибки обнуление прошлых данных
+                    self._Data = None  # в случае ошибки обнуление прошлых данных
                     raise ValueError("Ошибка в конфигурационном файле")
                 else:
                     self._Data = data
         else:
             logging.error("Указанного пути не существует, path='%s'", self.path)
-            self._Data = None   # в случае ошибки обнуление прошлых данных
-            raise ValueError("Указанного пути не существует, path='%s'", self.path)
+            self._Data = None  # в случае ошибки обнуление прошлых данных
+            raise ValueError("Указанного пути не существует, path='" + self.path + "'")
 
     def get_data(self):
         """
@@ -64,7 +64,7 @@ class Configuration:
                 return self._Data[key]
             else:
                 logging.error("Ключ недействителен: '%s'", key)
-                raise ValueError("Ключ недействителен: '%s'", key)
+                raise ValueError("Ключ недействителен: '" + key + "'")
         else:
             logging.error("Конфигурационные данные отсутствуют")
             raise ValueError("Конфигурационные данные отсутствуют")
