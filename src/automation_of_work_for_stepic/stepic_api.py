@@ -29,7 +29,7 @@ class StepicAPI:
         :return: (client_id, secret_key)
         """
         if not os.path.exists(path):
-            print(f"Error: load client: path {path} not found")
+            print("Error: load client: path %s not found", path)
             return None, None
 
         with open(path) as f:
@@ -38,7 +38,7 @@ class StepicAPI:
         if data:
             return data.get('client_id'), data.get('client_secret')
 
-        print(f"Error: client id: file {path} has wrong structure")
+        print("Error: client id: file %s has wrong structure", path)
         return None, None
 
     def get_url_authorize(self, redirect_uri: str):
@@ -47,7 +47,8 @@ class StepicAPI:
         :param redirect_uri:  ссылка на адрес, который получит код авторизации
         :return: сформированный url
         """
-        return self.url_auth + f'authorize/?response_type=code&client_id={self.client_id}&redirect_uri={redirect_uri}'
+        return self.url_auth + 'authorize/?response_type=code&client_id=' + str(
+            self.client_id) + '&redirect_uri=' + str(redirect_uri)
 
     def init_token(self, code: str, redirect_uri: str):
         """
@@ -87,7 +88,7 @@ class StepicAPI:
         :return: (client_id, secret_key)
         """
         if not os.path.exists(path):
-            print(f"Error: load client: path {path} not found")
+            print("Error: load client: path %s not found", path)
             return None, None
 
         with open(path) as f:
@@ -96,7 +97,7 @@ class StepicAPI:
         if data:
             return data.get('client_id'), data.get('client_secret')
 
-        print(f"Error: client id: file {path} has wrong structure")
+        print("Error: client id: file %s has wrong structure", path)
         return None, None
 
     def load_token(self, path: str = os.path.join('instance')):
@@ -106,7 +107,7 @@ class StepicAPI:
         :return: Bool
         """
         if not os.path.exists(os.path.join(path, 'token.json')):
-            print(f"Error: load token: path {path} not found")
+            print("Error: load token: path %s not found", path)
             return False
 
         with open(os.path.join(path, 'token.json'), 'r') as f:
@@ -118,7 +119,7 @@ class StepicAPI:
             self.token_type = data['token_type']
             return True
         else:
-            (f"Error: load token: file {os.path.join(path,'token.json')} has wrong structure")
+            ("Error: load token: file "+str(os.path.join(path,'token.json'))+" has wrong structure")
             return False
 
     def save_token(self, path: str = os.path.join('instance')):
@@ -217,7 +218,7 @@ class StepicAPI:
                 return None
         except:
             print(
-                f"Error in function get__first_correct_sol_for_student(step_id={step_id}, student_id={student_id})")
+                "Error in function get__first_correct_sol_for_student(step_id=%s, student_id=%s)", step_id, student_id)
 
     def date_first_wrong_solutions(self, student_id, step_id):
         """
@@ -236,7 +237,7 @@ class StepicAPI:
                 return None
         except:
             print(
-                f"Error in function get_of_first_wrong_sol_for_student(step_id={step_id}, student_id={student_id})")
+                "Error in function get_of_first_wrong_sol_for_student(step_id=%s, student_id=%s)", step_id, student_id)
 
     def solutions(self, student_id, step_id):
         """
@@ -256,7 +257,7 @@ class StepicAPI:
             return step_submissions, False
         except Exception as e:
             print(
-                f"Error in function get_date_of_first_wrong_sol_for_student(step_id={step_id}, student_id={student_id})")
+                "Error in function get_date_of_first_wrong_sol_for_student(step_id=%s, student_id=%s)", step_id, student_id)
             print(e)
             return [], False
 
@@ -333,4 +334,4 @@ class StepicAPI:
 if __name__ == '__main__':
     a = StepicAPI()
     a.load_token()
-    print(a.courses(['37059', '1', '123456', '2345678987654']))
+    print([a.course(course) for course in ['37059', '1', '123456', '2345678987654']])

@@ -6,10 +6,11 @@ from automation_of_work_for_stepic.mongo_model import *
 from mongoengine.connection import get_db
 
 from datetime import datetime
+import logging
 
 @singleton
 class InformationsProcessor:
-    def __init__(self,user_id=None):
+    def __init__(self, user_id=None):
         """
         """
         self.stepic_api = stepic_api.StepicAPI()
@@ -23,7 +24,7 @@ class InformationsProcessor:
         if user_id:
             if self.user_loaded(user_id):
                 self.load_exist(user_id)
-                self.loaded=True
+                self.loaded = True
             else:
                 self.create_user(user_id)
                 self.loaded = False
@@ -47,10 +48,10 @@ class InformationsProcessor:
 
         self.create_config()
 
-        #получаем инфу со степика
+        # получаем инфу со степика
         courses_id, students_id, google_names_students = self.get_google_table_info()
 
-        #скачиваем инфу о студентах
+        # скачиваем инфу о студентах
         student_id, unknown_student = self.create_students(students_id, google_names_students)
 
         # скачиваем курсы
@@ -71,8 +72,8 @@ class InformationsProcessor:
         self.courses = course_id
         self.students = student_id
 
-        self.config.students=self.students
-        self.config.courses=self.courses
+        self.config.students = self.students
+        self.config.courses = self.courses
         self.config.save()
         # скачиваем оценки
         for s in student_id:
@@ -82,24 +83,29 @@ class InformationsProcessor:
         # считаем прогресс элементов курса
         self.create_progress()
 
-        #загружаем в бд некорректные значения
-        self.create_incorrect(unknown_student,unknown_course,no_permission_course)
-        self.user.last_update=datetime.now()
+        # загружаем в бд некорректные значения
+        self.create_incorrect(unknown_student, unknown_course, no_permission_course)
+        self.user.last_update = datetime.now()
         self.user.save()
-        self.loaded=True
+        self.loaded = True
 
-    def load_exist(self,user_id):
+    def load_exist(self, user_id):
         """
         Загружаем уже загруженные данные
         :param user_id:
         :return:
         """
-        self.user=User.objects.with_id(user_id)
-        self.config=Config.objects.with_id(user_id)
-        self.incorrect=Incorrect.objects.with_id(user_id)
-        self.students=self.config.students
-        self.courses=self.config.courses
-        self.loaded=True
+        self.user = User.objects.with_id(user_id)
+        self.config = Config.objects.with_id(user_id)
+        self.incorrect = Incorrect.objects.with_id(user_id)
+        self.students = self.config.students
+        self.courses = self.config.courses
+        self.loaded = True
+        # print(self.user)
+        # print(self.config)
+        # print(self.incorrect)
+        # print(self.students)
+        # print(self.courses)
 
     def get_google_table_info(self):
         table_config = self.config.google_table  # получение конфигурационных данных о google-таблицы
@@ -119,7 +125,7 @@ class InformationsProcessor:
 
         return courses_id, students_id, google_names_students
 
-    def user_loaded(self,user_id):
+    def user_loaded(self, user_id):
         return User.objects.with_id(user_id) and User.objects.with_id(user_id).last_update
 
     ## создание таблиц
@@ -128,18 +134,18 @@ class InformationsProcessor:
         self.user = User(user_id)
         self.user.save()
 
-
     def create_config(self):
         """
         Возвращает список список курсов из конфига и список студентов из гугл таблицы
         """
         conf.Configuration().load_config()
 
-        self.config = Config(id=self.user.id,**(conf.Configuration().get_data()))
+        self.config = Config(id=self.user.id, **(conf.Configuration().get_data()))
         self.config.save()
 
-    def create_incorrect(self,unknown_student,unknown_course,no_permission_course):
-        self.incorrect=Incorrect(id=self.user.id, unknown_student=unknown_student, unknown_course=unknown_course, no_permission_course=no_permission_course)
+    def create_incorrect(self, unknown_student, unknown_course, no_permission_course):
+        self.incorrect = Incorrect(id=self.user.id, unknown_student=unknown_student, unknown_course=unknown_course,
+                                   no_permission_course=no_permission_course)
         self.incorrect.save()
 
     def create_students(self, ids, google_names):
@@ -149,7 +155,7 @@ class InformationsProcessor:
         for i, gn in zip(ids, google_names):
             sn = stepic_names[i]
             if sn is None:
-                print(f"Неизвестный пользователь id={i}")
+                logging.info("Неизвестный пользователь id=%s", i)
                 incorrect.append(gn + '(' + str(i) + ')')
             else:
                 Student(id=i, name_stepic=sn, name_google=gn).save()
@@ -322,10 +328,10 @@ class InformationsProcessor:
         if solutions:
             if solutions[0]['status'] == 'wrong':
                 wrong_date = solutions[0]['time']
-                wrong_date= datetime.strptime(wrong_date, '%Y-%m-%dT%H:%M:%SZ')
+                wrong_date = datetime.strptime(wrong_date, '%Y-%m-%dT%H:%M:%SZ')
                 try:
                     correct_date = next(filter(lambda x: x['status'] == 'correct', solutions))['time']
-                    correct_date=datetime.strptime(correct_date, '%Y-%m-%dT%H:%M:%SZ')
+                    correct_date = datetime.strptime(correct_date, '%Y-%m-%dT%H:%M:%SZ')
                 except:
                     pass
             else:
@@ -376,10 +382,12 @@ class InformationsProcessor:
         """
         Возвращает информацию о пользователе
         """
-        return self.loaded,self.user,self.config,self.incorrect
+        return self.loaded, self.user, self.config, self.incorrect
+
 
 if __name__ == "__main__":
-    a = InformationsProcessor()
+    db = connect('stepic', host="127.0.0.1", port=27017)
+    a = InformationsProcessor(user_id=19618699)
     a.create_config()
     # a.stepic_api.load_token()
     # a.main_1()

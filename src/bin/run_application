@@ -16,15 +16,16 @@ LEVELS = {'debug': logging.DEBUG,
 
 def correct_path(path: str):
     """
-    Проверяет что в директории существую необходимые файлы
+    Verifies that the required files exist in the directory
     :param path:
     :return:
     """
     if os.path.isdir(path) and all([os.path.isfile(os.path.join(path, file)) for file in file_needs_for_app]):
         return path
     else:
+        files = [i for i in file_needs_for_app]
         raise argparse.ArgumentTypeError(
-            f"Error: run_applications: the path {path} must specify the directory with \n {[i for i in file_needs_for_app]}")
+            "Error: run_applications: the path "+path+" must specify the directory with \n "+str(files))
 
 
 if __name__ == '__main__':
@@ -83,7 +84,7 @@ if __name__ == '__main__':
 
     from mongoengine import connect
 
-    logging.info(f'Check connection to database (host={args.host_db} port={args.port_db})')
+    logging.info('Check connection to database (host='+str(args.host_db)+' port='+str(args.port_db)+')')
     db=connect('stepic', host=args.host_db, port=args.port_db)
     try:
         db.server_info()

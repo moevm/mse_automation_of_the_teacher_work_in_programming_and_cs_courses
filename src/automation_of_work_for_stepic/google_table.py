@@ -20,7 +20,8 @@ class GoogleTable:
         :param key_path: путь к токену для работы с google_api
         """
         if os.path.exists(key_path):
-            self.gc = gspread.authorize(ServiceAccountCredentials.from_json_keyfile_name(key_path, ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']))
+            self.gc = gspread.authorize(ServiceAccountCredentials.from_json_keyfile_name(key_path, [
+                'https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']))
             self.Table = None
         else:
             logging.error("Указанного пути к токену google_api не существует")
@@ -62,19 +63,19 @@ class GoogleTable:
         if type(sheet) is int:
             self.Sheet = self.Table.get_worksheet(sheet)  # если лист таблицы задан номером
             if not self.Sheet:
-                logging.warning(f"Несуществующий лист таблицы №{sheet}")
-                raise ValueError(f"Несуществующий лист таблицы №{sheet}")
+                logging.warning("Несуществующий лист таблицы №%s", sheet)
+                raise ValueError("Несуществующий лист таблицы №" + str(sheet))
         elif type(sheet) is str:
             try:
                 self.Sheet = self.Table.worksheet(sheet)  # если лист таблицы задан именем
             except gspread.exceptions.WorksheetNotFound:
                 self.Sheet = None
-                logging.warning(f"Несуществующий лист таблицы с именем '{sheet}'")
-                raise ValueError(f"Несуществующий лист таблицы с именем '{sheet}'")
+                logging.warning("Несуществующий лист таблицы с именем '%s'", sheet)
+                raise ValueError("Несуществующий лист таблицы с именем '" + str(sheet) + "'")
         else:
             self.Sheet = None
-            logging.warning(f"Неверный формат sheet: {sheet}")
-            raise ValueError(f"Неверный формат sheet: {sheet}")
+            logging.warning("Неверный формат sheet: %s", sheet)
+            raise ValueError("Неверный формат sheet: " + str(sheet))
 
     def get_column(self, col):
         """
@@ -87,21 +88,21 @@ class GoogleTable:
                 try:
                     return self.Sheet.col_values(col)  # получение столбца, заданного номером
                 except gspread.exceptions.IncorrectCellLabel:
-                    logging.warning(f"Некорректный номер столбца: {col}")
-                    raise ValueError(f"Некорректный номер столбца: {col}")
+                    logging.warning("Некорректный номер столбца: %s", col)
+                    raise ValueError("Некорректный номер столбца: " + col)
             elif type(col) is str:
                 try:
                     return self.Sheet.col_values(
                         gspread.utils.a1_to_rowcol(col + "1")[1])  # получение столбца, заданного буквой
                 except gspread.exceptions.APIError:
-                    logging.error(f"Ошибка GoogleAPI, проверьте правильность имени столбца: '{col}'")
-                    raise ValueError(f"Ошибка GoogleAPI, проверьте правильность имени столбца: '{col}'")
+                    logging.error("Ошибка GoogleAPI, проверьте правильность имени столбца: '%s'", col)
+                    raise ValueError("Ошибка GoogleAPI, проверьте правильность имени столбца: " + str(col))
                 except gspread.exceptions.IncorrectCellLabel:
-                    logging.warning(f"Некорректное имя столбца: '{col}' (Проверьте раскладку клавиатуры)")
-                    raise ValueError(f"Некорректное имя столбца: '{col}' (Проверьте раскладку клавиатуры)")
+                    logging.warning("Некорректное имя столбца: '%s' (Проверьте раскладку клавиатуры)", col)
+                    raise ValueError("Некорректное имя столбца: " + str(col) + " (Проверьте раскладку клавиатуры)")
             else:
-                logging.warning(f"Неверный формат col(столбца): {col}")
-                raise ValueError(f"Неверный формат col(столбца): {col}")
+                logging.warning("Неверный формат col(столбца): %s", col)
+                raise ValueError("Неверный формат col(столбца): " + str(col))
 
     def get_row(self, num):
         """

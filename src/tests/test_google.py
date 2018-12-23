@@ -41,7 +41,8 @@ class TestInitGoogleTable(unittest.TestCase):
         table = g_table.GoogleTable()
         with self.assertRaises(ValueError) as raised_exception:
             table.set_table('https://vk.com')
-        self.assertEqual(raised_exception.exception.args[0], "Не найден корректный ключ таблицы в URL, проверьте правильность ссылки на таблицу")
+        self.assertEqual(raised_exception.exception.args[0],
+                         "Не найден корректный ключ таблицы в URL, проверьте правильность ссылки на таблицу")
         self.assertEqual(table.Table, None)
         self.assertEqual(table.Sheet, None)
 
@@ -69,19 +70,22 @@ class TestInitGoogleTable(unittest.TestCase):
         table = g_table.GoogleTable()
         with self.assertRaises(ValueError) as raised_exception:
             table.set_table('https://docs.google.com/spreadsheets/d/it_is_wrong_key')
-        self.assertEqual(raised_exception.exception.args[0], "Ошибка google_api, проверьте правильность ссылки на таблицу")
+        self.assertEqual(raised_exception.exception.args[0],
+                         "Ошибка google_api, проверьте правильность ссылки на таблицу")
         self.assertEqual(table.Table, None)
         self.assertEqual(table.Sheet, None)
 
         with self.assertRaises(ValueError) as raised_exception:
             table.set_table('https://docs.google.com/spreadsheets/d/16I1mG_kMug_test_Bpnh_K23V_GTOWuN5hAEQG6OfOhIOlprA')
-        self.assertEqual(raised_exception.exception.args[0], "Ошибка google_api, проверьте правильность ссылки на таблицу")
+        self.assertEqual(raised_exception.exception.args[0],
+                         "Ошибка google_api, проверьте правильность ссылки на таблицу")
         self.assertEqual(table.Table, None)
         self.assertEqual(table.Sheet, None)
 
         with self.assertRaises(ValueError) as raised_exception:
             table.set_table('https://docs.google.com/spreadsheets/d/must_be_valid_url')
-        self.assertEqual(raised_exception.exception.args[0], "Ошибка google_api, проверьте правильность ссылки на таблицу")
+        self.assertEqual(raised_exception.exception.args[0],
+                         "Ошибка google_api, проверьте правильность ссылки на таблицу")
         self.assertEqual(table.Table, None)
         self.assertEqual(table.Sheet, None)
 
@@ -186,7 +190,9 @@ class TestGet(unittest.TestCase):
         table = g_table.GoogleTable()
         table.set_table('https://docs.google.com/spreadsheets/d/1t1szRuyb023sfuXLf6p-fDLmMcNtAmKfK0enj4URTxU')
         self.assertEqual(table.get_row(1), ['ФИО', 'ID'])
-        self.assertEqual(table.get_list(1, 2, 11), ['Азаревич Артём', 'Афийчук И.И.', 'Гомонова Анастасия ', 'Григорьев И.С.', 'Иванов В.С.', 'Кухарев М.А.', 'Лавренкова Екатерина', 'Мейзер Д.В.', 'Михайлов Ю.А.'])
+        self.assertEqual(table.get_list(1, 2, 11),
+                         ['Азаревич Артём', 'Афийчук И.И.', 'Гомонова Анастасия ', 'Григорьев И.С.', 'Иванов В.С.',
+                          'Кухарев М.А.', 'Лавренкова Екатерина', 'Мейзер Д.В.', 'Михайлов Ю.А.'])
 
     @ignore_warnings
     @mock.patch('sys.stderr')
@@ -199,7 +205,8 @@ class TestGet(unittest.TestCase):
         table.set_table('https://docs.google.com/spreadsheets/d/1t1szRuyb023sfuXLf6p-fDLmMcNtAmKfK0enj4URTxU')
         with self.assertRaises(ValueError) as raised_exception:
             table.set_sheet("Non-existent sheet")
-        self.assertEqual(raised_exception.exception.args[0], "Несуществующий лист таблицы с именем 'Non-existent sheet'")
+        self.assertEqual(raised_exception.exception.args[0],
+                         "Несуществующий лист таблицы с именем 'Non-existent sheet'")
         self.assertEqual(table.get_column(1), None)
         self.assertEqual(table.get_row(1), None)
         self.assertEqual(table.get_list(1, 1, 10), None)
