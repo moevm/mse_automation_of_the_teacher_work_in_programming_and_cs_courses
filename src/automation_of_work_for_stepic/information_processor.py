@@ -6,7 +6,7 @@ from automation_of_work_for_stepic.mongo_model import *
 from mongoengine.connection import get_db
 
 from datetime import datetime
-
+import logging
 
 @singleton
 class InformationsProcessor:
@@ -101,6 +101,11 @@ class InformationsProcessor:
         self.students = self.config.students
         self.courses = self.config.courses
         self.loaded = True
+        # print(self.user)
+        # print(self.config)
+        # print(self.incorrect)
+        # print(self.students)
+        # print(self.courses)
 
     def get_google_table_info(self):
         table_config = self.config.google_table  # получение конфигурационных данных о google-таблицы
@@ -149,7 +154,7 @@ class InformationsProcessor:
         for i, gn in zip(ids, google_names):
             sn = stepic_names[i]
             if sn is None:
-                print("Неизвестный пользователь id=%s", i)
+                logging.info("Неизвестный пользователь id=%s", i)
                 incorrect.append(gn + '(' + str(i) + ')')
             else:
                 Student(id=i, name_stepic=sn, name_google=gn).save()
