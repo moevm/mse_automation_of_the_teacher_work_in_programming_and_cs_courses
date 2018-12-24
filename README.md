@@ -1,5 +1,6 @@
 # mse_automation_of_the_teacher_work_in_programming_and_cs_courses
 ## Запуск приложения:
+Приложение поддерживает версию **python 3.5+** <br>
 Необходимо установить **MongoDB** <br>
 Перед запуском необходимо создать папку со следующими файлы:
 * **stepic_client.json**: файл для доступа к stepic api <br>
@@ -24,7 +25,7 @@
 1. Создать виртуальное окружение myenv (https://docs.python.org/3/library/venv.html)
 2. cd ../src (в папке проекта)
 3. python setup.py develop (установка пакета)
-4. windows - ..\myvenv\Scripts run.batargs <br>
+4. windows - ..\myvenv\Scripts run.bat args <br>
 linux - run.sh args <br>
 Файлы имеют следующие аргументы: <br>
 **directory** - путь к папке содержащие необходимые файлы (описанные выше) - **обязательный параметр** <br>
@@ -32,6 +33,7 @@ linux - run.sh args <br>
 **-a, --host** - хост приложения (по умолчанию 5000)<br>
 **-pd, --port_db** - порт базы данных (по умолчанию 127.0.0.1)<br>
 **-ad, --host_db** -  хост базы данных (по умолчанию 27017)<br>
+(Пример run.sh  ~/resources -pd 32768 -ad 192.168.99.100)<br>
 <br>
 5. pip uninstall automation-of-work-for-stepic-distro (удаление пакета)
 
